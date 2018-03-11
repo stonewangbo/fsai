@@ -109,19 +109,19 @@ public class ZbMarket implements MarketApi {
 					logger.debug("content():{}", str);
 					JSONObject json = JSONObject.parseObject(str);
 					if (!StringUtils.isEmpty(json.getString("code")))
-						throw new ApiException(CCtype().getCn() + "深度数据获取失败  res:" + str);						
+						throw new ApiException(CCtype().getCn() + "深度数据获取失败  res:" + subError(str));						
 				
 						
 					DepthGroup depthGroup = new DepthGroup();
 					JSONArray buyArray = json.getJSONArray("bids");
 					if (buyArray == null) 
-						throw new ApiException(CCtype().getCn() + "深度数据获取失败  bids为空  res:" + str);
+						throw new ApiException(CCtype().getCn() + "深度数据获取失败  bids为空  res:" + subError(str));
 					
 					buyArray.stream().forEach(obj -> depthGroup.getBuy().add(
 							new DepthItem(((JSONArray) obj).getBigDecimal(0), ((JSONArray) obj).getBigDecimal(1))));
 					JSONArray sellArray = json.getJSONArray("asks");
 					if (sellArray == null) 
-						throw new ApiException(CCtype().getCn() + "深度数据获取失败  asks为空  res:" + str);
+						throw new ApiException(CCtype().getCn() + "深度数据获取失败  asks为空  res:" + subError(str));
 						
 					sellArray.stream().forEach(obj -> depthGroup.getSell().add(
 							new DepthItem(((JSONArray) obj).getBigDecimal(0), ((JSONArray) obj).getBigDecimal(1))));
@@ -133,6 +133,14 @@ public class ZbMarket implements MarketApi {
 			});
 		} catch (Exception e) {
 			depthInfo.depth(null, e);
+		}
+	}
+	
+	private String subError(String str){
+		if(str!=null){
+			return str.substring(0, str.length()>100?100:str.length());
+		}else{
+			return "null";
 		}
 	}
 	
