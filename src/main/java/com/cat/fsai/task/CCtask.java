@@ -25,7 +25,7 @@ public class CCtask {
 	@Autowired
 	private CalcEarn calcEarn;
 
-	@Scheduled(fixedRate = 1000)
+	@Scheduled(fixedRate = 1000*13)
 	public synchronized void getDepth() throws InterruptedException {
 		Stream.of(TR.values()).filter(tr -> tr.getRight()!=Coin.USDT
 				&&tr.getRight()!=Coin.QC
