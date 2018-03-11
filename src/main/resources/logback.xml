@@ -124,6 +124,31 @@
             <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:\(%line\)  | %msg%n</pattern>
         </encoder>
     </appender>
+    
+     <!-- bcx -->
+    <appender name="bcx"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/bcx/aex-bcx.log</file>
+        <!--<appender>true</appender>
+        <Encoding>UTF-8</Encoding>-->
+		 <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/error//aex-bcx.%d{yyyy-MM-dd}.log.gz
+            </fileNamePattern>
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:\(%line\)  | %msg%n</pattern>
+        </encoder>
+    </appender>
 
 
     <!-- 异步日志配置 -->
@@ -150,15 +175,32 @@
         <queueSize>10000</queueSize>
         <appender-ref ref="error" />
     </appender>
-  
+    
+    <appender name="bcx_async" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>3000</discardingThreshold>
+        <queueSize>10000</queueSize>
+        <appender-ref ref="bcx" />
+    </appender>
+    
+   
+   
+
+
+	<logger level="info" name="com.cat.fsai.task.AexBcxTask" additivity="false">
+        <!-- 去除错误日志 -->
+        <appender-ref ref="bcx_async"/>
+
+    </logger>
+    
+    <logger level="info" name="com.cat.fsai"  additivity="true">	   
+        <appender-ref ref="info_async" />       
+        <appender-ref ref="warn_async" />    
+        <appender-ref ref="error_async" />      
+    </logger>
  
 
     <root level="info">
-        <appender-ref ref="stdout" />
-        <appender-ref ref="info_async" />
-        <!-- <appender-ref ref="debug_async" /> -->    
-        <appender-ref ref="warn_async" />    
-        <appender-ref ref="error_async" />    
+       <appender-ref ref="stdout" />        
     </root>
 
 </configuration>

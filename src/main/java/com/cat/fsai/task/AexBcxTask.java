@@ -50,8 +50,10 @@ public class AexBcxTask {
 		 List<OrderItem> orderList = new ArrayList<>();
 		 Arrays.asList(TR.BCX_CNY,TR.ETH_CNY).forEach(tr->{
 			 aexMarket.orderList(tr, (ol,e)->{
-				 infolog("查询"+tr+"挂单",ol,e);
-				 orderList.addAll(ol);
+				 infolog("查询"+tr+"挂单",ol,e);	
+				 if(ol!=null){
+					 orderList.addAll(ol);
+				 }
 				 downLatch2.countDown();
 			 });
 		 });
