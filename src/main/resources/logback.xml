@@ -11,7 +11,7 @@
     <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
     	 <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
         <layout class="ch.qos.logback.classic.PatternLayout">          
               <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:\(%line\) | %msg%n</pattern>
@@ -26,7 +26,7 @@
        	<Encoding>UTF-8</Encoding>-->
 		 <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
 		
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -55,7 +55,7 @@
         <Encoding>UTF-8</Encoding>-->
 		 <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
 		
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -83,7 +83,7 @@
         <Encoding>UTF-8</Encoding>-->
 		 <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>WARN</level>
@@ -108,7 +108,7 @@
         <Encoding>UTF-8</Encoding>-->
 		 <encoder>
             <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-            <charset>utf8</charset>
+            <charset>UTF-8</charset>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
