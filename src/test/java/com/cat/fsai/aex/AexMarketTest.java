@@ -1,5 +1,6 @@
 package com.cat.fsai.aex;
 
+import java.math.BigDecimal;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -13,6 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.aex.AexMarket;
+import com.cat.fsai.type.OrderType;
 import com.cat.fsai.type.TR;
 
 @RunWith(SpringRunner.class)
@@ -42,6 +44,51 @@ public class AexMarketTest {
 			 }
 			 if(error!=null){
 				 logger.error("accountInfo error:",error);
+			 }
+			 downLatch.countDown();
+		 });
+		 downLatch.await(2000, TimeUnit.MILLISECONDS);
+	 }
+	 
+	 @Test
+	 public void orderList() throws InterruptedException {
+		 CountDownLatch downLatch = new CountDownLatch(1);
+		 aexMarket.orderList(TR.ETH_CNY, (ol,error)->{
+			 if(ol!=null){
+				 logger.info("orderList:{}",JSONObject.toJSONString(ol));
+			 }
+			 if(error!=null){
+				 logger.error("orderList error:",error);
+			 }
+			 downLatch.countDown();
+		 });
+		 downLatch.await(2000, TimeUnit.MILLISECONDS);
+	 }
+	 
+	 @Test
+	 public void submitOrder() throws InterruptedException {
+		 CountDownLatch downLatch = new CountDownLatch(1);
+		 aexMarket.sumbitOrder(TR.BCX_CNY,OrderType.Sell, BigDecimal.valueOf(0.0125),BigDecimal.valueOf(1000),(ol,error)->{
+			 if(ol!=null){
+				 logger.info("submitOrder:{}",JSONObject.toJSONString(ol));
+			 }
+			 if(error!=null){
+				 logger.error("submitOrder error:",error);
+			 }
+			 downLatch.countDown();
+		 });
+		 downLatch.await(2000, TimeUnit.MILLISECONDS);
+	 }
+	 
+	 @Test
+	 public void cancelOrder() throws InterruptedException {
+		 CountDownLatch downLatch = new CountDownLatch(1);
+		 aexMarket.cancelOrder(TR.ETH_CNY,"517588", (ol,error)->{
+			 if(ol!=null){
+				 logger.info("orderList:{}",JSONObject.toJSONString(ol));
+			 }
+			 if(error!=null){
+				 logger.error("orderList error:",error);
 			 }
 			 downLatch.countDown();
 		 });

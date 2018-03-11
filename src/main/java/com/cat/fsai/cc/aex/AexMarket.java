@@ -3,8 +3,11 @@ package com.cat.fsai.cc.aex;
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -26,13 +29,18 @@ import com.cat.fsai.cc.MarketApi;
 import com.cat.fsai.error.ApiException;
 import com.cat.fsai.error.ParamException;
 import com.cat.fsai.inter.AccountRes;
+import com.cat.fsai.inter.ApiRes;
 import com.cat.fsai.inter.DepthRes;
+import com.cat.fsai.inter.OrderListRes;
 import com.cat.fsai.inter.pojo.AccountInfo;
 import com.cat.fsai.inter.pojo.AccountInfoItem;
 import com.cat.fsai.inter.pojo.DepthGroup;
 import com.cat.fsai.inter.pojo.DepthItem;
+import com.cat.fsai.inter.pojo.OrderItem;
+import com.cat.fsai.inter.pojo.StandRes;
 import com.cat.fsai.type.CC;
 import com.cat.fsai.type.Coin;
+import com.cat.fsai.type.OrderType;
 import com.cat.fsai.type.TR;
 import com.cat.fsai.type.tr.AexTR;
 import com.cat.fsai.util.http.OKhttpUtil;
@@ -56,7 +64,11 @@ public class AexMarket implements MarketApi {
 
 	final private String url = "https://api.aex.com/";
 
-	final String depth = "depth.php";
+	final String depth = "depth.php";	
+	final String accountInfo = "getMyBalance.php";
+	final String orderList = "getOrderList.php";
+	final String submitOrder = "submitOrder.php";
+	final String cancelOrder = "cancelOrder.php";
 
 	private OkHttpClient client;
 
@@ -67,8 +79,7 @@ public class AexMarket implements MarketApi {
 	@Value("${aex.skey}")
 	public String skey;
 
-	final String accountInfo = "getMyBalance.php";
-
+	
 	@Autowired
 	private OKhttpUtil okhttpUtil;
 
@@ -181,9 +192,136 @@ public class AexMarket implements MarketApi {
 		}
 	}
 	
-	public void orderList(){
-		
+	public void orderList(TR tr,OrderListRes orderListRes){
+		try {
+			String tagetUrl = url + orderList;			
+			String now = System.currentTimeMillis() + "";
+
+			RequestBody formBody = new FormBody.Builder()
+					.add("key", key)
+					.add("time", now)
+					.add("md5", sign(now))
+					.add("mk_type", tr.getRight().name())
+					.add("coinname", tr.getLeft().name())
+					.build();
+
+			okhttpUtil.http(client, tagetUrl, null, formBody, (str, error) -> {
+				try {
+					if (error != null) {
+						throw new ApiException(CCtype().getCn() + "查询挂单信息失败 ", error);
+					}
+					 List<OrderItem> res = new ArrayList<>();		
+					//logger.info("str:{}", str);
+					if(str.contains("no_order")){
+						orderListRes.orderList(res, null);
+						return;
+					}
+					SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					JSONArray json = JSONArray.parseArray(str);		
+					logger.info("json:{}", JSONObject.toJSONString(json));									 
+					 json.stream().forEach(item->{
+						 try {
+						 JSONObject jo = (JSONObject)item;
+						 OrderItem o = new OrderItem();
+						 o.setOrderId(jo.getString("id"));
+						 o.setType(jo.getString("type").equals("1")?OrderType.Buy:OrderType.Sell);
+						 o.setTr(tr);
+						 o.setPrice(jo.getBigDecimal("price"));
+						 o.setAmount(jo.getBigDecimal("amount"));						
+						 o.setTime(format.parse(jo.getString("time")));
+						 res.add(o);
+						 } catch (Exception e) {
+						   throw new ApiException(e);						  
+						}
+					 });
+					 
+					orderListRes.orderList(res, null);
+				} catch (Exception e) {
+					orderListRes.orderList(null, new ApiException(CCtype().getCn() + "http res:"+str,e));
+				}
+			});
+		} catch (Exception e) {
+			orderListRes.orderList(null, e);
+		}
 	}
+	
+	public void sumbitOrder(TR tr,OrderType type,BigDecimal price,BigDecimal amount,ApiRes apiRes){
+		try {
+			String tagetUrl = url + submitOrder;			
+			String now = System.currentTimeMillis() + "";
+
+			RequestBody formBody = new FormBody.Builder()
+					.add("key", key)
+					.add("time", now)
+					.add("md5", sign(now))
+					.add("type", type==OrderType.Buy?"1":"2")
+					.add("mk_type", tr.getRight().name())
+					.add("price", price.toString())
+					.add("amount", amount.toString())			
+					.add("coinname", tr.getLeft().name())
+					.build();
+
+			okhttpUtil.http(client, tagetUrl, null, formBody, (str, error) -> {
+				try {
+					if (error != null) {
+						throw new ApiException(CCtype().getCn() + "挂单失败 ", error);
+					}
+					StandRes res = new StandRes();		
+					//logger.info("str:{}", str);
+					if(str.contains("succ")){
+						res.setSucess(true);
+					}else{
+						res.setSucess(false);
+					}
+					res.setMsg(str);
+					apiRes.res(res, null);
+				} catch (Exception e) {
+					apiRes.res(null, new ApiException(CCtype().getCn() +tagetUrl+ "http res:"+str,e));
+				}
+			});
+		} catch (Exception e) {
+			apiRes.res(null, e);
+		}
+	}
+	
+	public void cancelOrder(TR tr,String orderId,ApiRes apiRes){
+		try {
+			String tagetUrl = url + cancelOrder;			
+			String now = System.currentTimeMillis() + "";
+
+			RequestBody formBody = new FormBody.Builder()
+					.add("key", key)
+					.add("time", now)
+					.add("md5", sign(now))
+					.add("mk_type", tr.getRight().name())
+					.add("order_id", orderId)
+					.add("coinname", tr.getLeft().name())					
+					.build();
+
+			okhttpUtil.http(client, tagetUrl, null, formBody, (str, error) -> {
+				try {
+					if (error != null) {
+						throw new ApiException(CCtype().getCn() + "取消挂单失败 ", error);
+					}
+					StandRes res = new StandRes();		
+					//logger.info("str:{}", str);
+					if(str.contains("succ") || str.contains("overtime")){
+						res.setSucess(true);
+					}else{
+						res.setSucess(false);
+					}
+					res.setMsg(str);
+					apiRes.res(res, null);
+				} catch (Exception e) {
+					apiRes.res(null, new ApiException(CCtype().getCn() + "http res:"+str,e));
+				}
+			});
+		} catch (Exception e) {
+			apiRes.res(null, e);
+		}
+	}
+	
+	
 	
 	private String sign(String time) throws NoSuchAlgorithmException{
 		MessageDigest md = MessageDigest.getInstance("MD5");

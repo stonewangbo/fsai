@@ -2,10 +2,8 @@ package com.cat.fsai.task;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -15,7 +13,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
@@ -34,7 +31,7 @@ public class ZbBtnTask {
 	private ZbMarket zbMarket;
 	
 	@SuppressWarnings("serial")
-	@Scheduled(fixedRate = 1000*60*5)
+	//@Scheduled(fixedRate = 1000*60*5)
 	public synchronized void btnSell() throws Exception {
 		zbSellBuy(Coin.BTN,Coin.EOS,BigDecimal.valueOf(10));
 		zbSellBuy(Coin.BTN,Coin.XRP,BigDecimal.valueOf(10));
