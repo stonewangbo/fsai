@@ -27,7 +27,9 @@ public class CCtask {
 
 	@Scheduled(fixedRate = 1000)
 	public synchronized void getDepth() throws InterruptedException {
-		Stream.of(TR.values()).filter(tr -> tr.getRight()!=Coin.USDT||tr.getRight()!=Coin.QC).sequential()
+		Stream.of(TR.values()).filter(tr -> tr.getRight()!=Coin.USDT
+				&&tr.getRight()!=Coin.QC
+				&&tr.getRight()!=Coin.BitCNY).sequential()
 				.forEach(tr -> {
 					try {
 						AllDepth allDepth = marketService.getAllDepth(tr);

@@ -45,7 +45,7 @@ public class AexMarketTest {
 			 }
 			 downLatch.countDown();
 		 });
-		 downLatch.await(1000, TimeUnit.MILLISECONDS);
+		 downLatch.await(2000, TimeUnit.MILLISECONDS);
 	 }
 	 
 }

@@ -181,6 +181,10 @@ public class AexMarket implements MarketApi {
 		}
 	}
 	
+	public void orderList(){
+		
+	}
+	
 	private String sign(String time) throws NoSuchAlgorithmException{
 		MessageDigest md = MessageDigest.getInstance("MD5");
 		return DatatypeConverter.printHexBinary(
