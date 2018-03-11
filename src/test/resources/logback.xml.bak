@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration debug="false" scan="true" scanPeriod="5 minutes">
+    <contextName>cat-fsai-cc</contextName>
+   
+
+    <!-- 日志文件存储路径 -->
+    <property name="LOG_HOME" value="${catalina.home}/logs/" />
+
+    <!-- 控制台输出 -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <!-- 			<pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{200}:%file\(%line\) | %msg%n</pattern> -->
+              <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:%file\(%line\) | %msg%n</pattern>
+        </layout>
+    </appender>
+
+    <!-- Info -->
+    <appender name="info"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/info/fsai-cat-info.log</file>
+        <appender>true</appender>
+        <Encoding>UTF-8</Encoding>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <!-- 每小时生成日志文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/info/fsai-cat.%d{yyyy-MM-dd}-info.log.gz
+            </fileNamePattern>
+            <!-- 日志文件保留15天 -->
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+
+        <!-- 格式化输出 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:%file\(%line\) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Debug -->
+    <appender name="debug"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/debug/fsai-cat-debug.log</file>
+        <appender>true</appender>
+        <Encoding>UTF-8</Encoding>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+
+        <!-- 每小时生成日志文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/debug/fsai-cat.%d{yyyy-MM-dd}-debug.log.gz
+            </fileNamePattern>
+            <!-- 日志文件保留15天 -->
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+
+        <!-- 格式化输出 -->
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:%file\(%line\) | %X{clientDatetime} | %X{ip} | %X{clientIp} | %X{upIp} | %X{tokenId} | %X{operateId} | %X{deviceId} | %chain | %X{systemId} | %X{clientSystemId} | %X{serverSystemId} | tid-[%mdc{t}] cla-[%c] sid-[%mdc{sid}] uid-[%mdc{uid}] yrd_uid-[%X{yrd_uid}] yrd_cid-[%mdc{yrd_cid}] | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Error -->
+    <appender name="error"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/error/fsai-cat-error.log</file>
+        <appender>true</appender>
+        <Encoding>UTF-8</Encoding>
+
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/error/fsai-cat.%d{yyyy-MM-dd}-error.log.gz
+            </fileNamePattern>
+            <maxHistory>15</maxHistory>
+        </rollingPolicy>
+
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <pattern>%date{yyyy-MM-dd HH:mm:ss.SSS} | %thread | %-5level | %class{20}:%file\(%line\) | %X{clientDatetime} | %X{ip} | %X{clientIp} | %X{upIp} | %X{tokenId} | %X{operateId} | %X{deviceId} | %chain | %X{systemId} | %X{clientSystemId} | %X{serverSystemId} | tid-[%mdc{t}] cla-[%c] sid-[%mdc{sid}] uid-[%mdc{uid}] yrd_uid-[%X{yrd_uid}] yrd_cid-[%mdc{yrd_cid}] | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- 异步日志配置 -->
+    <appender name="info_async" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>3000</discardingThreshold>
+        <queueSize>10000</queueSize>
+        <appender-ref ref="info" />
+    </appender>
+
+    <appender name="debug_async" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>3000</discardingThreshold>
+        <queueSize>10000</queueSize>
+        <appender-ref ref="debug" />
+    </appender>
+
+    <appender name="error_async" class="ch.qos.logback.classic.AsyncAppender">
+        <discardingThreshold>3000</discardingThreshold>
+        <queueSize>10000</queueSize>
+        <appender-ref ref="error" />
+    </appender>
+  
+ 
+
+    <root level="debug">
+        <appender-ref ref="stdout" />
+        <!-- <appender-ref ref="info_async" />
+        <appender-ref ref="debug_async" />
+        <appender-ref ref="error_async" />     --> 
+    </root>
+
+</configuration>
