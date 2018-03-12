@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
@@ -216,6 +217,7 @@ public class AexMarket implements MarketApi {
 						return;
 					}
 					SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+					format.setTimeZone(TimeZone.getTimeZone("Asia/Shanghai"));  
 					JSONArray json = JSONArray.parseArray(str);		
 					logger.info("json:{}", JSONObject.toJSONString(json));									 
 					 json.stream().forEach(item->{
