@@ -41,9 +41,8 @@ public class AexBcxTask {
 	private AexMarket aexMarket;
 	
 	@Scheduled(fixedRate = 1000*60*3)
-	public synchronized void bcxSell() throws Exception {
-		 BigDecimal bcxMin = BigDecimal.valueOf(1000);
-		 BigDecimal cnyMin = BigDecimal.valueOf(13);
+	public synchronized void bcxSell() throws Exception {		
+		 BigDecimal cnyMin = BigDecimal.valueOf(11);
 		
 		 //开始查询挂单
 		 CountDownLatch downLatch2 = new CountDownLatch(2);
@@ -95,10 +94,7 @@ public class AexBcxTask {
 		 
 		
 		 //开始查询行情
-		
-		 
-		 //根据行情和账户信息进行挂单
-		 if(!hasOrder[0] && infos[0].getInfoMap().get(Coin.BCX).getAvail().compareTo(bcxMin)>0){
+		 if(!hasOrder[0]){
 			 //bcx 数量满足要求,开始计算价格
 			 DepthGroup[] dgs = new  DepthGroup[1];
 			 CountDownLatch downLatchBcx = new CountDownLatch(1);
@@ -111,20 +107,27 @@ public class AexBcxTask {
 			 
 			
 			 BigDecimal price = price(dgs[0],4,RoundingMode.UP);
-			 logger.error("开始挂单卖出BCX_CNY, price:{}",price);
-			 //开始挂单
-			 CountDownLatch downLatch = new CountDownLatch(1);
-			 aexMarket.sumbitOrder(TR.BCX_CNY,OrderType.Sell, price,bcxMin,(ol,error)->{
-				 if(ol!=null){
-					 logger.info("submitOrder BCX_CNY price:{} res:{}",price,JSONObject.toJSONString(ol));
-				 }
-				 if(error!=null){
-					 logger.error("submitOrder BCX_CNY error:",error);
-				 }
-				 downLatch.countDown();
-			 });
-			 downLatch.await(2000, TimeUnit.MILLISECONDS);
+			 BigDecimal count = cnyMin.divide(price, 0, RoundingMode.DOWN);
+			 //根据行情和账户信息进行挂单
+			 if(infos[0].getInfoMap().get(Coin.BCX).getAvail().compareTo(count)>0){
+				
+				 logger.error("开始挂单卖出BCX_CNY, price:{} count{}",price,count);
+				 //开始挂单
+				 CountDownLatch downLatch = new CountDownLatch(1);
+				 aexMarket.sumbitOrder(TR.BCX_CNY,OrderType.Sell, price,count,(ol,error)->{
+					 if(ol!=null){
+						 logger.info("submitOrder BCX_CNY price:{} res:{}",price,JSONObject.toJSONString(ol));
+					 }
+					 if(error!=null){
+						 logger.error("submitOrder BCX_CNY error:",error);
+					 }
+					 downLatch.countDown();
+				 });
+				 downLatch.await(2000, TimeUnit.MILLISECONDS);
+			 }
 		 }
+		 
+		
 		 //判断是否可以进行eth买入挂单
 		 if(!hasOrder[1] && infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
 			//bcx 数量满足要求,开始计算价格
