@@ -62,13 +62,13 @@ public class AexBcxTask {
 		 if(orderList.size()>0){
 			 logger.info("查询到之前未成交的挂单{}条,判断挂单信息",orderList.size());
 			 CountDownLatch downLatch3 = new CountDownLatch(orderList.size());
-			 long now = System.currentTimeMillis();
+//			 long now = System.currentTimeMillis();
 			 //过滤超过十分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-				 if((now-o.getTime().getTime())<1000*60*10){
-					 downLatch3.countDown();
-					 return;
-				 }
+//				 if((now-o.getTime().getTime())<1000*60*10){
+//					 downLatch3.countDown();
+//					 return;
+//				 }
 				 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
 					 infolog("撤销订单:",r,e);					
 				 });

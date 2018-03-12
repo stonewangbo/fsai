@@ -25,11 +25,12 @@ public class OKhttpUtil {
 			param.entrySet().stream().forEach(item->builder.addQueryParameter(item.getKey(), item.getValue()));
 		}
 		HttpUrl httpurl =builder.build();
-		Builder builder2 = new Request.Builder().url(httpurl);
+		Builder builder2 = new Request.Builder().url(httpurl).addHeader("User-Agent", 
+				"Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36");
 		if(body!=null){
 			builder2 = builder2.post(body);
 		}
-		 Request request = builder2.build();
+		 Request request = builder2.build();		
 		client.newCall(request).enqueue(new Callback() {
 			@Override
 			public void onResponse(Call call, Response response) throws IOException {
