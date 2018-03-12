@@ -40,10 +40,10 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
-	@Scheduled(fixedRate = 1000*60*20)
+	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell() throws Exception {
 		 BigDecimal bcxMin = BigDecimal.valueOf(1000);
-		 BigDecimal cnyMin = BigDecimal.valueOf(20);
+		 BigDecimal cnyMin = BigDecimal.valueOf(13);
 		
 		 //开始查询挂单
 		 CountDownLatch downLatch2 = new CountDownLatch(2);
@@ -58,19 +58,24 @@ public class AexBcxTask {
 			 });
 		 });
 		 downLatch2.await(2000, TimeUnit.MILLISECONDS);	
+		 
+		 boolean[] hasOrder = new boolean[]{false,false};
 		 //取消长时间未成交订单
 		 if(orderList.size()>0){
 			 logger.info("查询到之前未成交的挂单{}条,判断挂单信息",orderList.size());
 			 CountDownLatch downLatch3 = new CountDownLatch(orderList.size());
-//			 long now = System.currentTimeMillis();
-			 //过滤超过十分钟仍未成交的挂单
+			 long now = System.currentTimeMillis();
+			 //过滤超过10分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-//				 if((now-o.getTime().getTime())<1000*60*10){
-//					 downLatch3.countDown();
-//					 return;
-//				 }
+				 if((now-o.getTime().getTime())<1000*60*10){
+					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
+					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
+					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
+					 downLatch3.countDown();
+					 return;
+				 }
 				 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
-					 infolog("撤销订单:",r,e);					
+					 infolog("撤销订单  OrderId:"+o.getOrderId(),r,e);					
 				 });
 				 downLatch3.countDown();
 			 });
@@ -93,7 +98,7 @@ public class AexBcxTask {
 		
 		 
 		 //根据行情和账户信息进行挂单
-		 if(infos[0].getInfoMap().get(Coin.BCX).getAvail().compareTo(bcxMin)>0){
+		 if(!hasOrder[0] && infos[0].getInfoMap().get(Coin.BCX).getAvail().compareTo(bcxMin)>0){
 			 //bcx 数量满足要求,开始计算价格
 			 DepthGroup[] dgs = new  DepthGroup[1];
 			 CountDownLatch downLatchBcx = new CountDownLatch(1);
@@ -121,7 +126,7 @@ public class AexBcxTask {
 			 downLatch.await(2000, TimeUnit.MILLISECONDS);
 		 }
 		 //判断是否可以进行eth买入挂单
-		 if(infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
+		 if(!hasOrder[1] && infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
 			//bcx 数量满足要求,开始计算价格
 			 DepthGroup[] dgs = new  DepthGroup[1];
 			 CountDownLatch downLatchEth = new CountDownLatch(1);
@@ -138,10 +143,10 @@ public class AexBcxTask {
 			 CountDownLatch downLatch = new CountDownLatch(1);
 			 aexMarket.sumbitOrder(TR.ETH_CNY,OrderType.Buy, price,count,(ol,error)->{
 				 if(ol!=null){
-					 logger.info("submitOrder BCX_CNY price:{} count:{} res:{}",price,count,JSONObject.toJSONString(ol));
+					 logger.info("submitOrder ETH_CNY price:{} count:{} res:{}",price,count,JSONObject.toJSONString(ol));
 				 }
 				 if(error!=null){
-					 logger.error("submitOrder BCX_CNY error:",error);
+					 logger.error("submitOrder ETH_CNY error:",error);
 				 }
 				 downLatch.countDown();
 			 });

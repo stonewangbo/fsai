@@ -53,13 +53,19 @@ public class AexMarketTest {
 	 @Test
 	 public void orderList() throws InterruptedException {
 		 CountDownLatch downLatch = new CountDownLatch(1);
-		 aexMarket.orderList(TR.ETH_CNY, (ol,error)->{
+		 long now = System.currentTimeMillis();
+		 aexMarket.orderList(TR.BCX_CNY, (ol,error)->{
 			 if(ol!=null){
 				 logger.info("orderList:{}",JSONObject.toJSONString(ol));
 			 }
 			 if(error!=null){
 				 logger.error("orderList error:",error);
 			 }
+			 //过滤超过十分钟仍未成交的挂单
+			 ol.stream().forEach(o->{
+				 logger.info("diff :{}s",(now-o.getTime().getTime())/1000);
+					 
+			 });
 			 downLatch.countDown();
 		 });
 		 downLatch.await(2000, TimeUnit.MILLISECONDS);
