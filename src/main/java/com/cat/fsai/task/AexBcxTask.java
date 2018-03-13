@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.aex.AexMarket;
+import com.cat.fsai.error.ParamException;
 import com.cat.fsai.inter.pojo.AccountInfo;
 import com.cat.fsai.inter.pojo.DepthGroup;
 import com.cat.fsai.inter.pojo.DepthItem;
@@ -40,7 +41,7 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
-	@Scheduled(fixedRate = 1000*60*17)
+	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell() throws Exception {		
 		 BigDecimal cnyMin = BigDecimal.valueOf(11);
 		
@@ -64,9 +65,9 @@ public class AexBcxTask {
 			 logger.info("查询到之前未成交的挂单{}条,判断挂单信息",orderList.size());
 			 CountDownLatch downLatch3 = new CountDownLatch(orderList.size());
 			 long now = System.currentTimeMillis();
-			 //过滤超过10分钟仍未成交的挂单
+			 //过滤超过7分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-				 if((now-o.getTime().getTime())<1000*60*20){
+				 if((now-o.getTime().getTime())<1000*60*7){
 					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
 					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
 					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
@@ -106,7 +107,7 @@ public class AexBcxTask {
 			 downLatchBcx.await(2000, TimeUnit.MILLISECONDS);	
 			 
 			
-			 BigDecimal price = price(dgs[0],4,RoundingMode.UP);
+			 BigDecimal price = price(dgs[0],4,OrderType.Sell,RoundingMode.UP);
 			 BigDecimal count = cnyMin.divide(price, 0, RoundingMode.DOWN);
 			 //根据行情和账户信息进行挂单
 			 if(infos[0].getInfoMap().get(Coin.BCX).getAvail().compareTo(count)>0){
@@ -129,7 +130,7 @@ public class AexBcxTask {
 		 
 		
 		 //判断是否可以进行eth买入挂单
-		 if(!hasOrder[1] && infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
+		 if(!hasOrder[1] ){//&& infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
 			//bcx 数量满足要求,开始计算价格
 			 DepthGroup[] dgs = new  DepthGroup[1];
 			 CountDownLatch downLatchEth = new CountDownLatch(1);
@@ -139,7 +140,7 @@ public class AexBcxTask {
 				 downLatchEth.countDown();
 			 }, TR.ETH_CNY);	
 			 downLatchEth.await(2000, TimeUnit.MILLISECONDS);	
-			 BigDecimal price = price(dgs[0],0,RoundingMode.DOWN);
+			 BigDecimal price = price(dgs[0],0,OrderType.Buy,RoundingMode.DOWN);
 			 BigDecimal count = cnyMin.divide(price, 6, RoundingMode.DOWN);
 			 logger.error("开始挂单买入ETH_CNY, price:{} count:{}",price,count);
 			 //开始挂单
@@ -157,13 +158,28 @@ public class AexBcxTask {
 		 }
 	}
 	
-	private BigDecimal price(DepthGroup dg,int round,RoundingMode roundingMode) throws Exception{
+	private BigDecimal price(DepthGroup dg,int round,OrderType orderType,RoundingMode roundingMode) throws Exception{
+		 //排序获取最高买入价格,最低卖出价格
 		 Optional<DepthItem> buyPrice = dg.getBuy().stream().sorted((o1, o2) -> o2.getPrice().compareTo(o1.getPrice())).findFirst();
 		 Optional<DepthItem> sellPrice = dg.getSell().stream().sorted((o1, o2) -> o1.getPrice().compareTo(o2.getPrice())).findFirst();
 		 if(!buyPrice.isPresent()|| !sellPrice.isPresent()){
 			 throw new Exception("无法计算出深度数据:"+dg);
 		 }
-		return (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2),round,roundingMode);
+		 BigDecimal odd = BigDecimal.ONE;
+		 // 挂单盈余价格,按订单精度加一个零头
+		 for(int i=0;i<round;i++){
+			 odd = odd.divide(BigDecimal.TEN,round,roundingMode);
+		 }
+		//原取深度中间值算法,废弃,改为取深度当前方向,加零头算法
+		//return (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2),round,roundingMode);
+		 switch(orderType){
+			case Buy:
+				return buyPrice.get().getPrice().subtract(odd);			
+			case Sell:
+				return sellPrice.get().getPrice().add(odd);			
+			default:
+				throw new ParamException("orderType:"+orderType+" 不支持");
+		 }
 	}
 	
 	private void infolog(String title,Object obj,Exception e){
