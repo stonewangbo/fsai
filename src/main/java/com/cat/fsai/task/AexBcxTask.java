@@ -130,7 +130,7 @@ public class AexBcxTask {
 		 
 		
 		 //判断是否可以进行eth买入挂单
-		 if(!hasOrder[1] ){//&& infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
+		 if(!hasOrder[1] && infos[0].getInfoMap().get(Coin.BitCNY).getAvail().compareTo(cnyMin)>0){
 			//bcx 数量满足要求,开始计算价格
 			 DepthGroup[] dgs = new  DepthGroup[1];
 			 CountDownLatch downLatchEth = new CountDownLatch(1);
