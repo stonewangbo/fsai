@@ -40,7 +40,7 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
-	@Scheduled(fixedRate = 1000*60*3)
+	@Scheduled(fixedRate = 1000*60*17)
 	public synchronized void bcxSell() throws Exception {		
 		 BigDecimal cnyMin = BigDecimal.valueOf(11);
 		
@@ -66,7 +66,7 @@ public class AexBcxTask {
 			 long now = System.currentTimeMillis();
 			 //过滤超过10分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-				 if((now-o.getTime().getTime())<1000*60*10){
+				 if((now-o.getTime().getTime())<1000*60*20){
 					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
 					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
 					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
