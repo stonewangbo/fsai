@@ -71,13 +71,13 @@ public class AexBcxTask {
 					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
 					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
 					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
-					 downLatch3.countDown();
-					 return;
+					 downLatch3.countDown();					
+				 }else{
+					 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
+						 infolog("撤销订单  OrderId:"+o.getOrderId(),r,e);	
+						 downLatch3.countDown();
+					 });
 				 }
-				 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
-					 infolog("撤销订单  OrderId:"+o.getOrderId(),r,e);					
-				 });
-				 downLatch3.countDown();
 			 });
 			 downLatch3.await(2000, TimeUnit.MILLISECONDS);	
 		 }
@@ -165,7 +165,7 @@ public class AexBcxTask {
 		 if(!buyPrice.isPresent()|| !sellPrice.isPresent()){
 			 throw new Exception("无法计算出深度数据:"+dg);
 		 }
-		 BigDecimal odd = BigDecimal.ONE;
+		 BigDecimal odd = BigDecimal.ONE;		
 		 // 挂单盈余价格,按订单精度加一个零头
 		 for(int i=0;i<round;i++){
 			 odd = odd.divide(BigDecimal.TEN,round,roundingMode);
