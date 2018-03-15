@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.aex.AexMarket;
+import com.cat.fsai.error.BussException;
 import com.cat.fsai.error.ParamException;
 import com.cat.fsai.inter.pojo.AccountInfo;
 import com.cat.fsai.inter.pojo.DepthGroup;
@@ -41,7 +42,7 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
-	@Scheduled(fixedRate = 1000*60*3)
+	@Scheduled(fixedRate = 1000*60*7)
 	public synchronized void bcxSell() throws Exception {		
 		 BigDecimal cnyMin = BigDecimal.valueOf(11);
 		
@@ -57,7 +58,7 @@ public class AexBcxTask {
 				 downLatch2.countDown();
 			 });
 		 });
-		 downLatch2.await(2000, TimeUnit.MILLISECONDS);	
+		 if(!downLatch2.await(2000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");	
 		 
 		 boolean[] hasOrder = new boolean[]{false,false};
 		 //取消长时间未成交订单
@@ -67,7 +68,7 @@ public class AexBcxTask {
 			 long now = System.currentTimeMillis();
 			 //过滤超过7分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-				 if((now-o.getTime().getTime())<1000*60*7){
+				 if((now-o.getTime().getTime())<1000*60*9){
 					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
 					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
 					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
@@ -79,7 +80,7 @@ public class AexBcxTask {
 					 });
 				 }
 			 });
-			 downLatch3.await(2000, TimeUnit.MILLISECONDS);	
+			 if(!downLatch3.await(7000, TimeUnit.MILLISECONDS))throw new BussException("撤销订单超时");	
 		 }
 		 
 		 //查询账户信息
@@ -90,9 +91,7 @@ public class AexBcxTask {
 			 infos[0] = info;
 			 downLatch4.countDown();
 		 });
-		 downLatch4.await(2000, TimeUnit.MILLISECONDS);
-		 
-		 
+		 if(!downLatch4.await(2000, TimeUnit.MILLISECONDS))throw new BussException("查询账户信息超时");
 		
 		 //开始查询行情
 		 if(!hasOrder[0]){
@@ -104,8 +103,7 @@ public class AexBcxTask {
 				 dgs[0] = dg;
 				 downLatchBcx.countDown();
 			 }, TR.BCX_CNY);	
-			 downLatchBcx.await(2000, TimeUnit.MILLISECONDS);	
-			 
+			 if(!downLatchBcx.await(2000, TimeUnit.MILLISECONDS))throw new BussException("查询BCX_CNY深度超时");	
 			
 			 BigDecimal price = price(dgs[0],4,OrderType.Sell,RoundingMode.UP);
 			 BigDecimal count = cnyMin.divide(price, 0, RoundingMode.DOWN);
@@ -124,7 +122,7 @@ public class AexBcxTask {
 					 }
 					 downLatch.countDown();
 				 });
-				 downLatch.await(2000, TimeUnit.MILLISECONDS);
+				 if(!downLatch.await(2000, TimeUnit.MILLISECONDS))throw new BussException("挂单卖出BCX_CNY超时");	
 			 }
 		 }
 		 
@@ -139,7 +137,7 @@ public class AexBcxTask {
 				 dgs[0] = dg;
 				 downLatchEth.countDown();
 			 }, TR.ETH_CNY);	
-			 downLatchEth.await(2000, TimeUnit.MILLISECONDS);	
+			 if(! downLatchEth.await(2000, TimeUnit.MILLISECONDS))throw new BussException("查询ETH_CNY深度超时");		
 			 BigDecimal price = price(dgs[0],0,OrderType.Buy,RoundingMode.DOWN);
 			 BigDecimal count = cnyMin.divide(price, 6, RoundingMode.DOWN);
 			 logger.error("开始挂单买入ETH_CNY, price:{} count:{}",price,count);
@@ -154,7 +152,7 @@ public class AexBcxTask {
 				 }
 				 downLatch.countDown();
 			 });
-			 downLatch.await(2000, TimeUnit.MILLISECONDS);
+			 if(! downLatch.await(2000, TimeUnit.MILLISECONDS))throw new BussException("挂单买入ETH_CNY超时");	
 		 }
 	}
 	
