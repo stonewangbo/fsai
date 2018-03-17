@@ -24,6 +24,7 @@ import com.cat.fsai.cc.aex.AexMarket;
 import com.cat.fsai.error.BussException;
 import com.cat.fsai.error.ParamException;
 import com.cat.fsai.inter.pojo.AccountInfo;
+import com.cat.fsai.inter.pojo.AsyncObject;
 import com.cat.fsai.inter.pojo.DepthGroup;
 import com.cat.fsai.inter.pojo.DepthItem;
 import com.cat.fsai.inter.pojo.OrderItem;
@@ -49,9 +50,9 @@ public class AexBcxTask {
 	public synchronized void bcxSell()  {	
 		
 		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.007);
+			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.009);
 		}catch(Exception e){
-			logger.error("BCX_CNC出借",e);
+			logger.error("卖出BCX_CNC",e);
 		}
 		try{
 			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
@@ -84,73 +85,67 @@ public class AexBcxTask {
 	private void doTr(TR tr,OrderType type,double min,int priceRound,int countRound,double dis) throws Exception{
 		 String str = "tr:"+tr+" type:"+type; 
 		 //开始查询挂单
-		 CountDownLatch cdOl = new CountDownLatch(1);
-		 List<OrderItem> orderList = new ArrayList<>();
-		 aexMarket.orderList(tr, (ol,e)->{
-			 infolog("查询"+str+"挂单",ol,e);	
+		 AsyncObject<List<OrderItem>> aoOI = new  AsyncObject<>(str+"查询挂单",1,new ArrayList<>());		
+		 aexMarket.orderList(tr, (ol,e)->{			
 			 if(ol!=null){
-				 orderList.addAll(ol);
+				 infolog("查询"+str+"挂单",ol);	
+				 aoOI.getObj().addAll(ol);
 			 }
-			 cdOl.countDown();
+			 aoOI.setE(e);
+			 aoOI.getCdl().countDown();
 		 });
-		 if(!cdOl.await(9000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");
-		 boolean[] hasOrder = new boolean[]{false};
+		 List<OrderItem> orderList = aoOI.waitAndGet(9000);
+		 
+		// boolean[] hasOrder = new boolean[]{false};
+		 AsyncObject<Boolean> hasOrder = new AsyncObject<>(str+"判断挂单信息",orderList.size(),false);
 		//取消长时间未成交订单
 		 if(orderList.size()>0){
-			 logger.info("{}查询到之前未成交的挂单{}条,判断挂单信息",str,orderList.size());
-			 CountDownLatch cdoc = new CountDownLatch(orderList.size());
+			 logger.info("{}查询到之前未成交的挂单{}条,判断挂单信息",str,orderList.size());			
 			 long now = System.currentTimeMillis();
 			 //过滤超过7分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
 				 
-				 if(o.getType()==OrderType.Sell && (now-getTime(tr))<1000*60*15){
-					 hasOrder[0] = true;
+				 if((now-getTime(tr))<1000*60*15){
+					 hasOrder.setObj(true);
 					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-getTime(tr))/1000);
-					 cdoc.countDown();		
-				 }else if(o.getType()==OrderType.Buy && (now-getTime(tr))<1000*60*15) {
-					 hasOrder[0] = true;
-					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-getTime(tr))/1000);
-					 cdoc.countDown();					
+					 hasOrder.getCdl().countDown();		
 				 }else{
-					 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
-						 infolog("撤销订单  OrderId:"+o.getOrderId(),r,e);							
-						 cdoc.countDown();
+					 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{	
+						 hasOrder.setE(e);
+						 hasOrder.getCdl().countDown();
 					 });
 				 }
 			 });
-			 if(!cdoc.await(5000, TimeUnit.MILLISECONDS))throw new BussException(str+"撤销订单超时");	
+			 infolog(hasOrder.getName(),hasOrder.waitAndGet(5000));
 		 }
-		 
-		 //查询账户信息
-		 AccountInfo[] infos  = new AccountInfo[1]; 
-		 CountDownLatch cdai = new CountDownLatch(1);
-		 aexMarket.accountInfo((info,error)->{
-			 infolog("查询账户信息",info,error);
-			 infos[0] = info;
-			 cdai.countDown();
-		 });
-		 if(!cdai.await(5000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询账户信息超时");
-		 
-		 if(hasOrder[0]){
+		 if(hasOrder.getObj()){
 			 logger.info("{} 当前有在时效范围内挂单,不进行交易",str);
 			 return;
 		 }
+		 
+		 //查询账户信息		
+		 AsyncObject<AccountInfo> infos = new  AsyncObject<>(str+"查询账户信息",1,null);		
+		 aexMarket.accountInfo((info,e)->{			
+			 infos.setObj(info);
+			 infos.setE(e);
+			 infos.getCdl().countDown();
+		 });		
+		 infolog(infos.getName(),infos.waitAndGet(5000));
 		//开始查询行情
 		
-		 //bcx 数量满足要求,开始计算价格
-		 DepthGroup[] dgs = new  DepthGroup[1];
-		 CountDownLatch downLatchBcx = new CountDownLatch(1);
-		 aexMarket.depth((dg,e)->{		
-			 infolog("查询BCX_CNY深度",dg,e);
-			 dgs[0] = dg;
-			 downLatchBcx.countDown();
-		 }, tr);	
-		 if(!downLatchBcx.await(2000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询深度超时");	
+		 //bcx 数量满足要求,开始计算价格		
+		 AsyncObject<DepthGroup> dgs = new  AsyncObject<>(str+"查询市场深度",1,null);		
+		 aexMarket.depth((dg,e)->{	
+			 dgs.setE(e);
+			 dgs.setObj(dg);
+			 dgs.getCdl().countDown();;
+		 }, tr);					
+		 infolog(dgs.getName(),dgs.waitAndGet(2000));
 		
-		 BigDecimal price = price(dgs[0],priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));
+		 BigDecimal price = price(dgs.getObj(),priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));
 		 BigDecimal count = BigDecimal.valueOf(min).divide(price, countRound, RoundingMode.DOWN);
 		 Coin targetCoin = OrderType.Sell==type?tr.getLeft():tr.getRight();		
-		 BigDecimal minCoin = infos[0].getInfoMap().get(targetCoin).getAvail();
+		 BigDecimal minCoin = infos.getObj().getInfoMap().get(targetCoin).getAvail();
 		 //根据行情和账户信息进行挂单
 		 if(OrderType.Sell==type?minCoin.compareTo(count)<0:minCoin.compareTo(BigDecimal.valueOf(min))<0){
 			 logger.info("{} 账户余额:{} 不足,不进行交易",str,minCoin);
@@ -159,14 +154,14 @@ public class AexBcxTask {
 			
 		 logger.error("{}开始挂单, price:{} count:{}",str,price,count);
 		 //开始挂单
-		 CountDownLatch downLatch = new CountDownLatch(1);
-		 aexMarket.sumbitOrder(tr,type, price,count,(ol,error)->{
+		 CountDownLatch downLatch = new CountDownLatch(1);		 
+		 aexMarket.sumbitOrder(tr,type, price,count,(ol,e)->{
 			 if(ol!=null){
 				 logger.info("{} submitOrder price:{} res:{}",str,price,JSONObject.toJSONString(ol));
 				 trTime.put(tr, System.currentTimeMillis());
 			 }
-			 if(error!=null){
-				 logger.error("{} submitOrder BCX_CNY error:",str,error);
+			 if(e!=null){
+				 logger.error("{} submitOrder BCX_CNY error:",str,e);
 			 }
 			 downLatch.countDown();
 		 });
@@ -199,12 +194,9 @@ public class AexBcxTask {
 		 }
 	}
 	
-	private void infolog(String title,Object obj,Exception e){
+	private void infolog(String title,Object obj){
 		if(obj!=null){
 			logger.info("{} res:{}",title,JSONObject.toJSONString(obj));
-		}
-		if(e!=null){
-			logger.warn("{} error:",title,e);
-		}
+		}	
 	}
 }
