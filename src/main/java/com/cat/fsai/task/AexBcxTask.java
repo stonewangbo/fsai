@@ -39,6 +39,9 @@ import com.cat.fsai.type.TR;
 public class AexBcxTask {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
+	static long buyTime =0;
+	static long sellTime = 0;
+	
 	@Autowired
 	private AexMarket aexMarket;
 	
@@ -68,10 +71,14 @@ public class AexBcxTask {
 			 long now = System.currentTimeMillis();
 			 //过滤超过7分钟仍未成交的挂单
 			 orderList.stream().forEach(o->{
-				 if((now-o.getTime().getTime())<1000*60*15){
-					 if(o.getTr()==TR.BCX_CNY) hasOrder[0] = true;
-					 if(o.getTr()==TR.ETH_CNY) hasOrder[1] = true;
-					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-o.getTime().getTime())/1000);
+				 
+				 if(o.getType()==OrderType.Sell && (now-sellTime)<1000*60*15){
+					 hasOrder[0] = true;
+					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-sellTime)/1000);
+					 downLatch3.countDown();		
+				 }else if(o.getType()==OrderType.Buy && (now-buyTime)<1000*60*15) {
+					 hasOrder[1] = true;
+					 logger.info("挂单 oderid:{} 目前时间{}秒 还未到取消时间范围", o.getOrderId(),(now-buyTime)/1000);
 					 downLatch3.countDown();					
 				 }else{
 					 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{
@@ -116,6 +123,7 @@ public class AexBcxTask {
 				 aexMarket.sumbitOrder(TR.BCX_CNY,OrderType.Sell, price,count,(ol,error)->{
 					 if(ol!=null){
 						 logger.info("submitOrder BCX_CNY price:{} res:{}",price,JSONObject.toJSONString(ol));
+						 sellTime = System.currentTimeMillis();
 					 }
 					 if(error!=null){
 						 logger.error("submitOrder BCX_CNY error:",error);
@@ -146,6 +154,7 @@ public class AexBcxTask {
 			 aexMarket.sumbitOrder(TR.ETH_CNY,OrderType.Buy, price,count,(ol,error)->{
 				 if(ol!=null){
 					 logger.info("submitOrder ETH_CNY price:{} count:{} res:{}",price,count,JSONObject.toJSONString(ol));
+					 buyTime = System.currentTimeMillis();
 				 }
 				 if(error!=null){
 					 logger.error("submitOrder ETH_CNY error:",error);
@@ -170,7 +179,7 @@ public class AexBcxTask {
 			case Buy:
 				return midPrice.multiply(BigDecimal.valueOf(0.997)).setScale(round, roundingMode);			
 			case Sell:
-				return midPrice.multiply(BigDecimal.valueOf(1.01)).setScale(round, roundingMode);			
+				return midPrice.multiply(BigDecimal.valueOf(1.007)).setScale(round, roundingMode);			
 			default:
 				throw new ParamException("orderType:"+orderType+" 不支持");
 		 }

@@ -78,7 +78,7 @@ public class AexMarket implements MarketApi {
 	@Value("${aex.key}")
 	public String key;
 	@Value("${aex.skey}")
-	public String skey;
+	public String skey;	
 
 	
 	@Autowired
