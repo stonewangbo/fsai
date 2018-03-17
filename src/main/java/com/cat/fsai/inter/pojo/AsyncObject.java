@@ -5,11 +5,21 @@ import java.util.concurrent.TimeUnit;
 
 import com.cat.fsai.error.BussException;
 
+/**
+ * AsyncObject 异步任务辅助对象
+ * @author wangbo
+ * @version Mar 17, 2018 11:14:02 PM
+ */
 public class AsyncObject<T> {
 	private CountDownLatch cdl;
 	private String name;
 	private Exception e;	
 	private T obj;
+	/**
+	 * @param name 异步任务名称
+	 * @param size 任务大小
+	 * @param obj 任务返回对象
+	 */
 	public AsyncObject(String name,int size,T obj) {
 		super();
 		this.name = name;
