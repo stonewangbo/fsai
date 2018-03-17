@@ -72,7 +72,7 @@ public class AexBcxTask {
 			 }
 			 cdOl.countDown();
 		 });
-		 if(!cdOl.await(2000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");
+		 if(!cdOl.await(5000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");
 		 boolean[] hasOrder = new boolean[]{false};
 		//取消长时间未成交订单
 		 if(orderList.size()>0){
@@ -108,7 +108,7 @@ public class AexBcxTask {
 			 infos[0] = info;
 			 cdai.countDown();
 		 });
-		 if(!cdai.await(2000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询账户信息超时");
+		 if(!cdai.await(5000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询账户信息超时");
 		 
 		 if(hasOrder[0]){
 			 logger.info("{} 当前有在时效范围内挂单,不进行交易",str);
@@ -149,7 +149,7 @@ public class AexBcxTask {
 			 }
 			 downLatch.countDown();
 		 });
-		 if(!downLatch.await(2000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");	
+		 if(!downLatch.await(5000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");	
 		 
 		
 		 
