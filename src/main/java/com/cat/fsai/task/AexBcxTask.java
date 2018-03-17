@@ -45,7 +45,7 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
-	@Scheduled(fixedRate = 1000*60*7)
+	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell()  {	
 		try{
 			doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0);
