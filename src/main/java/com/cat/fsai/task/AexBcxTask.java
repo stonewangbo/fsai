@@ -49,30 +49,39 @@ public class AexBcxTask {
 	public synchronized void bcxSell()  {	
 		
 		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,BigDecimal.valueOf(11),4,0,0.007);
+			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.007);
 		}catch(Exception e){
 			logger.error("BCX_CNC出借",e);
 		}
 		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,BigDecimal.valueOf(10.5),1,6,0.007);
+			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
 		}catch(Exception e){
 			logger.error("买入EOS_CNC",e);
 		}
 		
 		try{
-			doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0,0.007);
+			doTr(TR.BCX_CNY,OrderType.Sell,11,4,0,0.007);
 		}catch(Exception e){
 			logger.error("卖出BCX_CNY出错",e);
 		}
 		try{
-			doTr(TR.ETH_CNY,OrderType.Buy,BigDecimal.valueOf(10.5),0,6,0.007);
+			doTr(TR.ETH_CNY,OrderType.Buy,10.5,0,6,0.007);
 		}catch(Exception e){
 			logger.error("买入ETH_CNY",e);
 		}
 	}
 	
 	
-	private void doTr(TR tr,OrderType type,BigDecimal min,int priceRound,int countRound,double dis) throws Exception{
+	/**
+	 * @param tr 交易对
+	 * @param type 交易方向
+	 * @param min 最小成交额
+	 * @param priceRound 订单价格精度
+	 * @param countRound 订单数量精度
+	 * @param dis 订单溢价比例
+	 * @throws Exception
+	 */
+	private void doTr(TR tr,OrderType type,double min,int priceRound,int countRound,double dis) throws Exception{
 		 String str = "tr:"+tr+" type:"+type; 
 		 //开始查询挂单
 		 CountDownLatch cdOl = new CountDownLatch(1);
@@ -139,11 +148,11 @@ public class AexBcxTask {
 		 if(!downLatchBcx.await(2000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询深度超时");	
 		
 		 BigDecimal price = price(dgs[0],priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));
-		 BigDecimal count = min.divide(price, countRound, RoundingMode.DOWN);
+		 BigDecimal count = BigDecimal.valueOf(min).divide(price, countRound, RoundingMode.DOWN);
 		 Coin targetCoin = OrderType.Sell==type?tr.getLeft():tr.getRight();		
 		 BigDecimal minCoin = infos[0].getInfoMap().get(targetCoin).getAvail();
 		 //根据行情和账户信息进行挂单
-		 if(OrderType.Sell==type?minCoin.compareTo(count)<0:minCoin.compareTo(min)<0){
+		 if(OrderType.Sell==type?minCoin.compareTo(count)<0:minCoin.compareTo(BigDecimal.valueOf(min))<0){
 			 logger.info("{} 账户余额:{} 不足,不进行交易",str,minCoin);
 			 return;
 		 }
