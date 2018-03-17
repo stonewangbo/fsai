@@ -46,9 +46,17 @@ public class AexBcxTask {
 	private AexMarket aexMarket;
 	
 	@Scheduled(fixedRate = 1000*60*7)
-	public synchronized void bcxSell() throws Exception {		
-		doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0);
-		doTr(TR.ETH_CNY,OrderType.Buy,BigDecimal.valueOf(11),0,6);
+	public synchronized void bcxSell()  {	
+		try{
+			doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0);
+		}catch(Exception e){
+			logger.error("卖出BCX出借",e);
+		}
+		try{
+			doTr(TR.ETH_CNY,OrderType.Buy,BigDecimal.valueOf(11),0,6);
+		}catch(Exception e){
+			logger.error("买入出借",e);
+		}
 	}
 	
 	
