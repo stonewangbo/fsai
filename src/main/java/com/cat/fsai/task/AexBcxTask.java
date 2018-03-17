@@ -87,7 +87,7 @@ public class AexBcxTask {
 					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-getTime(tr))/1000);
 					 cdoc.countDown();		
 				 }else if(o.getType()==OrderType.Buy && (now-getTime(tr))<1000*60*15) {
-					 hasOrder[1] = true;
+					 hasOrder[0] = true;
 					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-getTime(tr))/1000);
 					 cdoc.countDown();					
 				 }else{
