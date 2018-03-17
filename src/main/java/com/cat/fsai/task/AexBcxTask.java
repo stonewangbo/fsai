@@ -162,19 +162,15 @@ public class AexBcxTask {
 		 Optional<DepthItem> sellPrice = dg.getSell().stream().sorted((o1, o2) -> o1.getPrice().compareTo(o2.getPrice())).findFirst();
 		 if(!buyPrice.isPresent()|| !sellPrice.isPresent()){
 			 throw new Exception("无法计算出深度数据:"+dg);
-		 }
-		 BigDecimal odd = BigDecimal.ONE;		
-		 // 挂单盈余价格,按订单精度加一个零头
-		 for(int i=0;i<round;i++){
-			 odd = odd.divide(BigDecimal.TEN,round,roundingMode);
-		 }
-		//原取深度中间值算法,废弃,改为取深度当前方向,加零头算法
-		//return (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2),round,roundingMode);
+		 }		
+		
+		 //原取深度中间值算法,废弃,改为取深度当前方向,加零头算法
+		 BigDecimal  midPrice = (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2),round,roundingMode);
 		 switch(orderType){
 			case Buy:
-				return buyPrice.get().getPrice().subtract(odd);			
+				return midPrice.multiply(BigDecimal.valueOf(0.997)).setScale(round, roundingMode);			
 			case Sell:
-				return sellPrice.get().getPrice().add(odd);			
+				return midPrice.multiply(BigDecimal.valueOf(1.01)).setScale(round, roundingMode);			
 			default:
 				throw new ParamException("orderType:"+orderType+" 不支持");
 		 }
