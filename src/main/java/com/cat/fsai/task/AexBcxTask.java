@@ -72,7 +72,7 @@ public class AexBcxTask {
 			 }
 			 cdOl.countDown();
 		 });
-		 if(!cdOl.await(7000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");
+		 if(!cdOl.await(9000, TimeUnit.MILLISECONDS))throw new BussException("查询挂单超时");
 		 boolean[] hasOrder = new boolean[]{false};
 		//取消长时间未成交订单
 		 if(orderList.size()>0){
@@ -149,7 +149,7 @@ public class AexBcxTask {
 			 }
 			 downLatch.countDown();
 		 });
-		 if(!downLatch.await(5000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");	
+		 if(!downLatch.await(9000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");	
 		 
 		
 		 
