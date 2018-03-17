@@ -14,7 +14,10 @@ import com.cat.fsai.type.TR;
  */
 public enum AexTR {
 	BCX_CNY(TR.BCX_CNY),
-	ETH_CNY(TR.ETH_CNY);
+	ETH_CNY(TR.ETH_CNY),
+	BCX_CNC(TR.BCX_CNC),
+	ETH_CNC(TR.ETH_CNC),
+	EOS_CNC(TR.EOS_CNC);
 
     private TR tr;
 

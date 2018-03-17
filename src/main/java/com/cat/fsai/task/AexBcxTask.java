@@ -47,20 +47,32 @@ public class AexBcxTask {
 	
 	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell()  {	
+		
 		try{
-			doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0);
+			doTr(TR.BCX_CNC,OrderType.Sell,BigDecimal.valueOf(11),4,0,0.007);
 		}catch(Exception e){
-			logger.error("卖出BCX出借",e);
+			logger.error("BCX_CNC出借",e);
 		}
 		try{
-			doTr(TR.ETH_CNY,OrderType.Buy,BigDecimal.valueOf(11),0,6);
+			doTr(TR.EOS_CNC,OrderType.Buy,BigDecimal.valueOf(10.5),1,6,0.007);
 		}catch(Exception e){
-			logger.error("买入出借",e);
+			logger.error("买入EOS_CNC",e);
+		}
+		
+		try{
+			doTr(TR.BCX_CNY,OrderType.Sell,BigDecimal.valueOf(11),4,0,0.007);
+		}catch(Exception e){
+			logger.error("卖出BCX_CNY出错",e);
+		}
+		try{
+			doTr(TR.ETH_CNY,OrderType.Buy,BigDecimal.valueOf(10.5),0,6,0.007);
+		}catch(Exception e){
+			logger.error("买入ETH_CNY",e);
 		}
 	}
 	
 	
-	private void doTr(TR tr,OrderType type,BigDecimal min,int priceRound,int countRound) throws Exception{
+	private void doTr(TR tr,OrderType type,BigDecimal min,int priceRound,int countRound,double dis) throws Exception{
 		 String str = "tr:"+tr+" type:"+type; 
 		 //开始查询挂单
 		 CountDownLatch cdOl = new CountDownLatch(1);
@@ -126,7 +138,7 @@ public class AexBcxTask {
 		 }, tr);	
 		 if(!downLatchBcx.await(2000, TimeUnit.MILLISECONDS))throw new BussException(str+"查询深度超时");	
 		
-		 BigDecimal price = price(dgs[0],priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN);
+		 BigDecimal price = price(dgs[0],priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));
 		 BigDecimal count = min.divide(price, countRound, RoundingMode.DOWN);
 		 Coin targetCoin = OrderType.Sell==type?tr.getLeft():tr.getRight();		
 		 BigDecimal minCoin = infos[0].getInfoMap().get(targetCoin).getAvail();
@@ -149,11 +161,7 @@ public class AexBcxTask {
 			 }
 			 downLatch.countDown();
 		 });
-		 if(!downLatch.await(9000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");	
-		 
-		
-		 
-		 
+		 if(!downLatch.await(9000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");			 
 	}
 	
 	private long getTime(TR tr){
@@ -162,7 +170,7 @@ public class AexBcxTask {
 		return res;
 	}
 	
-	private BigDecimal price(DepthGroup dg,int round,OrderType orderType,RoundingMode roundingMode) throws Exception{
+	private BigDecimal price(DepthGroup dg,int round,OrderType orderType,RoundingMode roundingMode,BigDecimal dis) throws Exception{
 		 //排序获取最高买入价格,最低卖出价格
 		 Optional<DepthItem> buyPrice = dg.getBuy().stream().sorted((o1, o2) -> o2.getPrice().compareTo(o1.getPrice())).findFirst();
 		 Optional<DepthItem> sellPrice = dg.getSell().stream().sorted((o1, o2) -> o1.getPrice().compareTo(o2.getPrice())).findFirst();
@@ -171,12 +179,12 @@ public class AexBcxTask {
 		 }		
 		
 		 //原取深度中间值算法,废弃,改为取深度当前方向,加零头算法
-		 BigDecimal  midPrice = (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2),round,roundingMode);
+		 BigDecimal  midPrice = (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2));
 		 switch(orderType){
 			case Buy:
-				return midPrice.multiply(BigDecimal.valueOf(0.997)).setScale(round, roundingMode);			
+				return midPrice.multiply(BigDecimal.ONE.subtract(dis)).setScale(round, roundingMode);			
 			case Sell:
-				return midPrice.multiply(BigDecimal.valueOf(1.007)).setScale(round, roundingMode);			
+				return midPrice.multiply(BigDecimal.ONE.add(dis)).setScale(round, roundingMode);			
 			default:
 				throw new ParamException("orderType:"+orderType+" 不支持");
 		 }

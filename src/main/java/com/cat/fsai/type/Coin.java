@@ -24,7 +24,8 @@ public enum Coin {
 	NEO,
 	USDT,
 	QC,
-	BitCNY;
+	BitCNY,
+	CNC;
 	
 	static final Map<String,Coin> map = new HashMap<>();
 	
