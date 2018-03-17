@@ -189,18 +189,16 @@
 	<logger level="info" name="com.cat.fsai.task.AexBcxTask" additivity="false">
         <!-- 去除错误日志 -->
         <appender-ref ref="bcx_async"/>
+        <appender-ref ref="stdout" />        
 
     </logger>
     
     <logger level="info" name="com.cat.fsai"  additivity="true">	   
+    	 <appender-ref ref="stdout" />        
         <appender-ref ref="info_async" />       
         <appender-ref ref="warn_async" />    
         <appender-ref ref="error_async" />      
     </logger>
  
-
-    <root level="info">
-       <appender-ref ref="stdout" />        
-    </root>
 
 </configuration>
