@@ -49,16 +49,16 @@ public class AexBcxTask {
 	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell()  {	
 		
-		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.007);
-		}catch(Exception e){
-			logger.error("卖出BCX_CNC",e);
-		}
-		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
-		}catch(Exception e){
-			logger.error("买入EOS_CNC",e);
-		}
+//		try{
+//			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.007);
+//		}catch(Exception e){
+//			logger.error("卖出BCX_CNC",e);
+//		}
+//		try{
+//			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
+//		}catch(Exception e){
+//			logger.error("买入EOS_CNC",e);
+//		}
 		
 		try{
 			doTr(TR.BCX_CNY,OrderType.Sell,11,4,0,0.007);
