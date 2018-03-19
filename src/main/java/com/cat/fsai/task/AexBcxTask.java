@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.aex.AexMarket;
@@ -199,7 +200,8 @@ public class AexBcxTask {
 	
 	private void infolog(String title,Object obj){
 		if(obj!=null){
-			logger.info("{} res:{}",title,JSONObject.toJSONString(obj));
+			String json = JSONObject.toJSONString(obj);
+			logger.info("{} res:{}",title, json.length()>100?json.substring(0,90)+"..."+json.substring(json.length()-10, json.length()):json);
 		}	
 	}
 }
