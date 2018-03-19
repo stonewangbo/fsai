@@ -153,11 +153,11 @@ public class AexMarket implements MarketApi {
 	public void accountInfo(AccountRes accountRes) {
 		try {
 			String tagetUrl = url + accountInfo;			
-			String now = System.currentTimeMillis() + "";
+			long now = getime();
 
 			RequestBody formBody = new FormBody.Builder()
 					.add("key", key)
-					.add("time", now)
+					.add("time", now+"")
 					.add("md5", sign(now))
 					.build();
 
@@ -195,11 +195,11 @@ public class AexMarket implements MarketApi {
 	public void orderList(TR tr,OrderListRes orderListRes){
 		try {
 			String tagetUrl = url + orderList;			
-			String now = System.currentTimeMillis() + "";
+			long now = getime();
 
 			RequestBody formBody = new FormBody.Builder()
 					.add("key", key)
-					.add("time", now)
+					.add("time", now+"")
 					.add("md5", sign(now))
 					.add("mk_type", tr.getRight().name())
 					.add("coinname", tr.getLeft().name())
@@ -249,11 +249,11 @@ public class AexMarket implements MarketApi {
 	public void sumbitOrder(TR tr,OrderType type,BigDecimal price,BigDecimal amount,ApiRes apiRes){
 		try {
 			String tagetUrl = url + submitOrder;			
-			String now = System.currentTimeMillis() + "";
+			long now = getime();
 
 			RequestBody formBody = new FormBody.Builder()
 					.add("key", key)
-					.add("time", now)
+					.add("time", now+"")
 					.add("md5", sign(now))
 					.add("type", type==OrderType.Buy?"1":"2")
 					.add("mk_type", tr.getRight().name())
@@ -288,11 +288,11 @@ public class AexMarket implements MarketApi {
 	public void cancelOrder(TR tr,String orderId,ApiRes apiRes){
 		try {
 			String tagetUrl = url + cancelOrder;			
-			String now = System.currentTimeMillis() + "";
+			long now = getime();
 
 			RequestBody formBody = new FormBody.Builder()
 					.add("key", key)
-					.add("time", now)
+					.add("time", now+"")
 					.add("md5", sign(now))
 					.add("mk_type", tr.getRight().name())
 					.add("order_id", orderId)
@@ -322,9 +322,11 @@ public class AexMarket implements MarketApi {
 		}
 	}
 	
+	private long getime(){
+		return System.currentTimeMillis()/1000;
+	}
 	
-	
-	private String sign(String time) throws NoSuchAlgorithmException{
+	private String sign(long time) throws NoSuchAlgorithmException{
 		MessageDigest md = MessageDigest.getInstance("MD5");
 		return DatatypeConverter.printHexBinary(
 				md.digest((key + "_" + ID + "_" + skey + "_" + time).getBytes())).toUpperCase();
