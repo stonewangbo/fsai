@@ -31,7 +31,7 @@ public class AexMarketTest {
 		 aexMarket.depth((dg,e)->{
 			 logger.info("dg:{}",dg);
 			 downLatch.countDown();
-		 }, TR.BCX_CNY);
+		 }, TR.BCX_CNC);
 		 downLatch.await(2, TimeUnit.SECONDS);		
 	 }
 	 
@@ -54,7 +54,7 @@ public class AexMarketTest {
 	 public void orderList() throws InterruptedException {
 		 CountDownLatch downLatch = new CountDownLatch(1);
 		 long now = System.currentTimeMillis();
-		 aexMarket.orderList(TR.BCX_CNY, (ol,error)->{
+		 aexMarket.orderList(TR.BCX_CNC, (ol,error)->{
 			 if(ol!=null){
 				 logger.info("orderList:{}",JSONObject.toJSONString(ol));
 			 }
@@ -74,7 +74,7 @@ public class AexMarketTest {
 	 @Test
 	 public void submitOrder() throws InterruptedException {
 		 CountDownLatch downLatch = new CountDownLatch(1);
-		 aexMarket.sumbitOrder(TR.BCX_CNY,OrderType.Sell, BigDecimal.valueOf(0.0125),BigDecimal.valueOf(1000),(ol,error)->{
+		 aexMarket.sumbitOrder(TR.BCX_CNC,OrderType.Sell, BigDecimal.valueOf(0.0125),BigDecimal.valueOf(1000),(ol,error)->{
 			 if(ol!=null){
 				 logger.info("submitOrder:{}",JSONObject.toJSONString(ol));
 			 }

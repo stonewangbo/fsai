@@ -45,8 +45,8 @@ public class AsyncObject<T> {
 		return name;
 	}
 	public T waitAndGet(long millsecend) throws Exception{
-		if(e!=null) throw new BussException(name+"出现异常",e);
-		if(!cdl.await(millsecend, TimeUnit.MILLISECONDS))throw new BussException(name+"超时");				
+		if(!cdl.await(millsecend, TimeUnit.MILLISECONDS))throw new BussException(name+"超时");	
+		if(e!=null) throw new BussException(name+"出现异常",e);					
 		return obj;
 	}
 }
