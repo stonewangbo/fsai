@@ -55,7 +55,7 @@ public class AexBcxTask {
 			logger.error("卖出BCX_CNC",e);
 		}
 		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
+			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.014);
 		}catch(Exception e){
 			logger.error("买入EOS_CNC",e);
 		}
@@ -148,6 +148,7 @@ public class AexBcxTask {
 		 BigDecimal count = BigDecimal.valueOf(min).divide(price, countRound, RoundingMode.DOWN);
 		 Coin targetCoin = OrderType.Sell==type?tr.getLeft():tr.getRight();		
 		 BigDecimal minCoin = infos.getObj().getInfoMap().get(targetCoin).getAvail();
+		 logger.info("{} 计算完毕 price:{} count:{} minCoin:{}",str,price,count,minCoin);
 		 //根据行情和账户信息进行挂单
 		 if(OrderType.Sell==type?minCoin.compareTo(count)<0:minCoin.compareTo(BigDecimal.valueOf(min))<0){
 			 logger.info("{} 账户余额:{} 不足,不进行交易",str,minCoin);
