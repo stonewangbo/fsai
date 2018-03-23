@@ -1,6 +1,6 @@
 package com.cat.fsai.inter;
 
-import com.cat.fsai.inter.pojo.DepthGroup;
+		import com.cat.fsai.inter.pojo.DepthGroup;
 
 /**
  * DepthRes
@@ -9,7 +9,7 @@ import com.cat.fsai.inter.pojo.DepthGroup;
  */
 @FunctionalInterface
 public interface DepthRes {
-	
+
 	/**
 	 * 获得深度数据
 	 * @param depthGroup
