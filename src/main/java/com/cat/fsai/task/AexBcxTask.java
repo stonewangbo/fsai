@@ -56,7 +56,7 @@ public class AexBcxTask {
 			logger.error("卖出BCX_CNC",e);
 		}
 		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.014);
+			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
 		}catch(Exception e){
 			logger.error("买入EOS_CNC",e);
 		}
