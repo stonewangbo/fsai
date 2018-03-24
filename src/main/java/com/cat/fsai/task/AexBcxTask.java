@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.aex.AexMarket;
@@ -51,12 +50,12 @@ public class AexBcxTask {
 	public synchronized void bcxSell()  {	
 		
 		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.003);
+			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.001);
 		}catch(Exception e){
 			logger.error("卖出BCX_CNC",e);
 		}
 		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.007);
+			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.001);
 		}catch(Exception e){
 			logger.error("买入EOS_CNC",e);
 		}
@@ -190,9 +189,9 @@ public class AexBcxTask {
 		 BigDecimal  midPrice = (buyPrice.get().getPrice().add(sellPrice.get().getPrice())).divide(BigDecimal.valueOf(2));
 		 switch(orderType){
 			case Buy:
-				return midPrice.multiply(BigDecimal.ONE.subtract(dis)).setScale(round, roundingMode);			
+				return buyPrice.get().getPrice().multiply(BigDecimal.ONE.subtract(dis)).setScale(round, roundingMode);			
 			case Sell:
-				return midPrice.multiply(BigDecimal.ONE.add(dis)).setScale(round, roundingMode);			
+				return sellPrice.get().getPrice().multiply(BigDecimal.ONE.add(dis)).setScale(round, roundingMode);			
 			default:
 				throw new ParamException("orderType:"+orderType+" 不支持");
 		 }
