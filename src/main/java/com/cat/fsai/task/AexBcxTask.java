@@ -28,6 +28,7 @@ import com.cat.fsai.inter.pojo.AsyncObject;
 import com.cat.fsai.inter.pojo.DepthGroup;
 import com.cat.fsai.inter.pojo.DepthItem;
 import com.cat.fsai.inter.pojo.OrderItem;
+import com.cat.fsai.task.pojo.TaskInfo;
 import com.cat.fsai.type.Coin;
 import com.cat.fsai.type.OrderType;
 import com.cat.fsai.type.TR;
@@ -41,7 +42,7 @@ import com.cat.fsai.type.TR;
 public class AexBcxTask {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-	static Map<TR,Long> trTime = new HashMap<>();
+	static Map<TR,TaskInfo> trTime = new HashMap<>();
 	
 	@Autowired
 	private AexMarket aexMarket;
@@ -86,6 +87,21 @@ public class AexBcxTask {
 	 */
 	private void doTr(TR tr,OrderType type,double min,int priceRound,int countRound,double dis) throws Exception{
 		 String str = "tr:"+tr+" type:"+type; 
+		 
+		 //开始查询行情
+			
+		 //开始计算价格		
+		 AsyncObject<DepthGroup> dgs = new  AsyncObject<>(str+"查询市场深度",1,null);		
+		 aexMarket.depth((dg,e)->{	
+			 dgs.setE(e);
+			 dgs.setObj(dg);
+			 dgs.getCdl().countDown();;
+		 }, tr);					
+		 infolog(dgs.getName(),dgs.waitAndGet(2000));
+		
+		 BigDecimal price = price(dgs.getObj(),priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));				 
+		
+		 
 		 //开始查询挂单
 		 AsyncObject<List<OrderItem>> aoOI = new  AsyncObject<>(str+"查询挂单",1,new ArrayList<>());		
 		 aexMarket.orderList(tr, (ol,e)->{			
@@ -105,11 +121,14 @@ public class AexBcxTask {
 			 logger.info("{}查询到之前未成交的挂单{}条,判断挂单信息",str,orderList.size());			
 			 long now = System.currentTimeMillis();
 			 //过滤超过7分钟仍未成交的挂单
-			 orderList.stream().forEach(o->{
-				 
-				 if((now-getTime(tr))<1000*60*15){
+			 orderList.stream().forEach(o->{		
+				 TaskInfo taskInfo  = trTime.get(tr);
+				 if(taskInfo!=null && (now-taskInfo.getTime())<1000*60*15){
 					 hasOrder.setObj(true);
-					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-getTime(tr))/1000);
+					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-taskInfo.getTime())/1000);
+					 hasOrder.getCdl().countDown();		
+				 }else if(taskInfo!=null && taskInfo.getPrice().compareTo(price)==0){
+					 logger.info("{}挂单 oderid:{} 价格:{}未变化,无需取消挂单,已挂单时间:{}秒",str, o.getOrderId(),price,(now-taskInfo.getTime())/1000);
 					 hasOrder.getCdl().countDown();		
 				 }else{
 					 aexMarket.cancelOrder(o.getTr(), o.getOrderId(), (r,e)->{	
@@ -133,22 +152,12 @@ public class AexBcxTask {
 			 infos.getCdl().countDown();
 		 });		
 		 infolog(infos.getName(),infos.waitAndGet(5000));
-		//开始查询行情
 		
-		 //bcx 数量满足要求,开始计算价格		
-		 AsyncObject<DepthGroup> dgs = new  AsyncObject<>(str+"查询市场深度",1,null);		
-		 aexMarket.depth((dg,e)->{	
-			 dgs.setE(e);
-			 dgs.setObj(dg);
-			 dgs.getCdl().countDown();;
-		 }, tr);					
-		 infolog(dgs.getName(),dgs.waitAndGet(2000));
-		
-		 BigDecimal price = price(dgs.getObj(),priceRound,type,OrderType.Sell==type?RoundingMode.UP:RoundingMode.DOWN,BigDecimal.valueOf(dis));
 		 BigDecimal count = BigDecimal.valueOf(min).divide(price, countRound, RoundingMode.DOWN);
 		 Coin targetCoin = OrderType.Sell==type?tr.getLeft():tr.getRight();		
 		 BigDecimal minCoin = infos.getObj().getInfoMap().get(targetCoin).getAvail();
 		 logger.info("{} 计算完毕 price:{} count:{} minCoin:{}",str,price,count,minCoin);
+		 
 		 //根据行情和账户信息进行挂单
 		 if(OrderType.Sell==type?minCoin.compareTo(count)<0:minCoin.compareTo(BigDecimal.valueOf(min))<0){
 			 logger.info("{} 账户余额:{} 不足,不进行交易",str,minCoin);
@@ -161,7 +170,7 @@ public class AexBcxTask {
 		 aexMarket.sumbitOrder(tr,type, price,count,(ol,e)->{
 			 if(ol!=null){
 				 logger.info("{} submitOrder price:{} res:{}",str,price,JSONObject.toJSONString(ol));
-				 trTime.put(tr, System.currentTimeMillis());
+				 trTime.put(tr, new TaskInfo(System.currentTimeMillis(),price));
 			 }
 			 if(e!=null){
 				 logger.error("{} submitOrder BCX_CNY error:",str,e);
@@ -169,13 +178,8 @@ public class AexBcxTask {
 			 downLatch.countDown();
 		 });
 		 if(!downLatch.await(9000, TimeUnit.MILLISECONDS))throw new BussException(str+"挂单超时");			 
-	}
+	}	
 	
-	private long getTime(TR tr){
-		Long res = trTime.get(tr);
-		if(res==null)res = 0l;
-		return res;
-	}
 	
 	private BigDecimal price(DepthGroup dg,int round,OrderType orderType,RoundingMode roundingMode,BigDecimal dis) throws Exception{
 		 //排序获取最高买入价格,最低卖出价格
