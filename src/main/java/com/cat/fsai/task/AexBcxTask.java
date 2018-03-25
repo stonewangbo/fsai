@@ -128,6 +128,7 @@ public class AexBcxTask {
 					 logger.info("{}挂单 oderid:{} 目前时间{}秒 还未到取消时间范围",str, o.getOrderId(),(now-taskInfo.getTime())/1000);
 					 hasOrder.getCdl().countDown();		
 				 }else if(taskInfo!=null && taskInfo.getPrice().compareTo(price)==0){
+					 hasOrder.setObj(true);
 					 logger.info("{}挂单 oderid:{} 价格:{}未变化,无需取消挂单,已挂单时间:{}秒",str, o.getOrderId(),price,(now-taskInfo.getTime())/1000);
 					 hasOrder.getCdl().countDown();		
 				 }else{
@@ -140,7 +141,7 @@ public class AexBcxTask {
 			 infolog(hasOrder.getName(),hasOrder.waitAndGet(5000));
 		 }
 		 if(hasOrder.getObj()){
-			 logger.info("{} 当前有在时效范围内挂单,不进行交易",str);
+			 logger.info("{} 当前有有效挂单,不进行交易",str);
 			 return;
 		 }
 		 
