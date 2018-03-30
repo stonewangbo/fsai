@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -47,16 +48,22 @@ public class AexBcxTask {
 	@Autowired
 	private AexMarket aexMarket;
 	
+	@Value("${bcx.task.sell.rate}")
+	public double sellrate;	
+
+	@Value("${bcx.task.buy.rate}")
+	public double buyrate;	
+	
 	@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell()  {	
 		
 		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,0.0000);
+			doTr(TR.BCX_CNC,OrderType.Sell,11,4,0,sellrate);
 		}catch(Exception e){
 			logger.error("卖出BCX_CNC",e);
 		}
 		try{
-			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,0.001);
+			doTr(TR.EOS_CNC,OrderType.Buy,10.5,1,6,buyrate);
 		}catch(Exception e){
 			logger.error("买入EOS_CNC",e);
 		}
