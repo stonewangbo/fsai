@@ -93,7 +93,7 @@ public class AexBcxTask {
 	 * @throws Exception
 	 */
 	private void doTr(TR tr,OrderType type,double min,int priceRound,int countRound,double dis) throws Exception{
-		 String str = "tr:"+tr+" type:"+type; 
+		 String str = "tr:"+tr+" type:"+type+" min:"+min; 
 		 
 		 //开始查询行情
 			
