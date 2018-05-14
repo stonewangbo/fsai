@@ -58,7 +58,7 @@ public class AexBcxTask {
 	public synchronized void bcxSell()  {	
 		
 		try{
-			doTr(TR.BCX_CNC,OrderType.Sell,21,4,0,sellrate);
+			doTr(TR.BCX_CNC,OrderType.Sell,15,4,0,sellrate);
 		}catch(Exception e){
 			logger.error("卖出BCX_CNC",e);
 		}
