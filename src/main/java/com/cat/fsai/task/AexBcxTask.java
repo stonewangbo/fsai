@@ -54,7 +54,7 @@ public class AexBcxTask {
 	@Value("${bcx.task.buy.rate}")
 	public double buyrate;	
 	
-	@Scheduled(fixedRate = 1000*60*3)
+	//@Scheduled(fixedRate = 1000*60*3)
 	public synchronized void bcxSell()  {	
 		
 		try{
