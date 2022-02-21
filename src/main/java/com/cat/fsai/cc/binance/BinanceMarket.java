@@ -1,6 +1,7 @@
 package com.cat.fsai.cc.binance;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
@@ -44,6 +45,8 @@ public class BinanceMarket implements MarketApi {
 	private String url;
 
 	final String depth = "/api/v1/depth";
+
+	final String klines = "/api/v3/klines";
 
 	final String agent = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.71 Safari/537.36";
 
@@ -116,6 +119,20 @@ public class BinanceMarket implements MarketApi {
 		} catch (Exception e) {
 			depthInfo.depth(null, e);
 		}
+	}
+
+	public void klines(Date startTime,Date endTime,TR tr){
+		String tagetUrl = url + depth;
+		Optional<BinanceTR> marketTR = BinanceTR.searchByTr(tr);
+//		if (depthInfo == null) {
+//			throw new ParamException(CCtype().getCn()+"DepthRes 不能为空");
+//		}
+		if (!marketTR.isPresent()) {
+			throw new ParamException(CCtype().getCn() + "TR:" + tr + " 没有有效的交易对");
+		}
+
+	//	httpClient.newRequest(tagetUrl).agent(agent).param("symbol", marketTR.get().name()).param("limit", "20")
+
 	}
 
 	@Override

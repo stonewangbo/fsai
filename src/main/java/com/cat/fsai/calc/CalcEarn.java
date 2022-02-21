@@ -1,6 +1,7 @@
 package com.cat.fsai.calc;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -89,7 +90,7 @@ public class CalcEarn {
 		logger.info("tr:{}收益预测,数量:{} 购买平台:{} 价格:{} 售出平台:{} 价格:{} 差价:{} 比例:{}%", allDepth.getTr(), amount,
 				lowSell.get().getKey().getCn(), lowSell.get().getValue(), highBuy.get().getKey().getCn(),
 				highBuy.get().getValue(), earn,
-				(earn.divide(highBuy.get().getValue(), 10, BigDecimal.ROUND_HALF_DOWN))
+				(earn.divide(highBuy.get().getValue(), 10, RoundingMode.HALF_DOWN))
 				.multiply(BigDecimal.valueOf(100)));
 	}
 }
