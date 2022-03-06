@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -13,6 +14,7 @@ import java.io.IOException;
 
 
 @SpringBootApplication
+@Slf4j
 public class FsaiApplication extends Application{
 
 	private static String[] savedArgs;
@@ -26,8 +28,9 @@ public class FsaiApplication extends Application{
 	@Override
 	public void stop() throws Exception {
 		context.close();
-		System.gc();
-		System.runFinalization();
+		log.info("shut down finish");
+		//System.gc();
+		//System.runFinalization();
 	}
 	private Object createControllerForType(Class<?> type) {
 		return this.context.getBean(type);
