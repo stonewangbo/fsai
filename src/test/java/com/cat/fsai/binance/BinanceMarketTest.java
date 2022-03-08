@@ -42,7 +42,9 @@ public class BinanceMarketTest {
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date startTime = format.parse("2022-01-01 00:00:00");
 		Date endTime = format.parse("2022-01-01 00:05:00");
-		binanceMarket.klines(startTime,endTime, TR.BTC_USDT);
+		binanceMarket.klines((klines, e)->{
+			logger.info("klines:{} \r\n error:{}",klines,e);
+		},startTime,endTime, TR.BTC_USDT);
 		downLatch.await(2, TimeUnit.SECONDS);
 	}
 	 

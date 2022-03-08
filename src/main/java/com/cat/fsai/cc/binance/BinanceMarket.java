@@ -1,5 +1,6 @@
 package com.cat.fsai.cc.binance;
 
+import java.math.BigDecimal;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
@@ -8,7 +9,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.PostConstruct;
@@ -18,8 +21,10 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.error.ApiException;
 import com.cat.fsai.error.NetException;
+import com.cat.fsai.inter.KLineRes;
 import com.cat.fsai.inter.pojo.DepthGroup;
 import com.cat.fsai.inter.pojo.DepthItem;
+import com.cat.fsai.inter.pojo.KLine;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
@@ -145,7 +150,7 @@ public class BinanceMarket implements MarketApi {
 		}
 	}
 
-	public void klines(Date startTime,Date endTime,TR tr){
+	public void klines(KLineRes kLineRes, Date startTime, Date endTime, TR tr){
 		try {
 			String tagetUrl = url + klines;
 			Optional<BinanceTR> marketTR = BinanceTR.searchByTr(tr);
@@ -208,16 +213,35 @@ public class BinanceMarket implements MarketApi {
 						 ]
 						 ]
 						 */
-						log.debug("body():{}", body);
+						//log.debug("body():{}", body);
+						// 解析JSON
+						List<JSONArray> arrayList = JSONArray.parseArray(body, JSONArray.class);
+						//log.debug("arrayList:{}", arrayList);
+						List<KLine> kines = new ArrayList<>();
+						for(var array:arrayList){
+							KLine kline =  new KLine();
+							kline.setStartTime(new Date(array.getLong(0)));
+							kline.setBeginPr(new BigDecimal(array.getString(1)));
+							kline.setHighPr(new BigDecimal(array.getString(2)));
+							kline.setLowPr(new BigDecimal(array.getString(3)));
+							kline.setFinishPr(new BigDecimal(array.getString(4)));
+							kline.setTradeAmt(new BigDecimal(array.getString(5)));
+							kline.setEndTime(new Date(array.getLong(6)));
+							kline.setTurnover(new BigDecimal(array.getString(7)));
+							kline.setTradeCount(array.getInteger(8));
+							kline.setBuyAmt(new BigDecimal(array.getString(9)));
+							kline.setBuyTurnover(new BigDecimal(array.getString(10)));
+							kines.add(kline);
+						}
+						kLineRes.kLine(kines,null);
 						return "OK";
 					}).exceptionally(err -> {
-
+						kLineRes.kLine(null,err);
 						return "fallback";
 					});
 		}catch (Exception e){
-
+			kLineRes.kLine(null,e);
 		}
-
 	}
 
 	@Override
