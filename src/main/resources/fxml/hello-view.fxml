@@ -12,12 +12,12 @@
     <padding>
         <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
     </padding>
-   <LineChart id="lineA" title="测试深度图">
+   <LineChart fx:id="lineChart" title="测试深度图">
      <xAxis>
-       <CategoryAxis side="BOTTOM" />
+       <CategoryAxis side="BOTTOM" fx:id="xAxis" />
      </xAxis>
      <yAxis>
-       <NumberAxis side="LEFT" />
+       <NumberAxis side="LEFT" fx:id="yAxis" />
      </yAxis>
    </LineChart>
       <Label fx:id="welcomeText" />

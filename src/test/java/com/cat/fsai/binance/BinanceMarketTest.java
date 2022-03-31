@@ -1,18 +1,14 @@
 package com.cat.fsai.binance;
 
-import com.alibaba.fastjson.JSONObject;
 import com.cat.fsai.cc.binance.BinanceMarket;
-import com.cat.fsai.type.OrderType;
 import com.cat.fsai.type.TR;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
@@ -20,8 +16,9 @@ import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest()
+@Slf4j
 public class BinanceMarketTest {
-	 private Logger logger = LoggerFactory.getLogger(this.getClass());
+
 	 
 	 @Autowired
 	 private BinanceMarket binanceMarket;
@@ -30,7 +27,7 @@ public class BinanceMarketTest {
 	 public void depth() throws InterruptedException{
 		 CountDownLatch downLatch = new CountDownLatch(1);
 		 binanceMarket.depth((dg, e)->{
-			 logger.info("dg:{} \r\n error:{}",dg,e);
+			 log.info("dg:{} \r\n error:{}",dg,e);
 			 downLatch.countDown();
 		 }, TR.BTC_USDT);
 		 downLatch.await(2, TimeUnit.SECONDS);		
@@ -43,7 +40,8 @@ public class BinanceMarketTest {
 		Date startTime = format.parse("2022-01-01 00:00:00");
 		Date endTime = format.parse("2022-01-01 00:05:00");
 		binanceMarket.klines((klines, e)->{
-			logger.info("klines:{} \r\n error:{}",klines,e);
+			log.info("klines:{} \r\n error:{}",klines,e);
+			downLatch.countDown();
 		},startTime,endTime, TR.BTC_USDT);
 		downLatch.await(2, TimeUnit.SECONDS);
 	}
