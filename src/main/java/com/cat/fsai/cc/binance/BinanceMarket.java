@@ -184,7 +184,7 @@ public class BinanceMarket implements MarketApi {
 					.addParameter("interval", "1m")
 					.addParameter("startTime",String.valueOf(startTime.getTime()))
 					.addParameter("endTime", String.valueOf(endTime.getTime()))
-					.addParameter("limit", "20")
+					.addParameter("limit", "500")
 					.build();
 			HttpRequest request = HttpRequest.newBuilder()
 					.uri(uri)
