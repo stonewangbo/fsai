@@ -13,7 +13,6 @@ import java.nio.channels.AsynchronousFileChannel;
 import java.nio.channels.CompletionHandler;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -26,7 +25,7 @@ import java.util.concurrent.CountDownLatch;
 @Component
 public class FileRW {
 
-     static final int buffSize = 1024;
+     static final int buffSize = 8*1024;
 
      static final byte[] CRLF= "\r\n".getBytes();
 
@@ -40,6 +39,7 @@ public class FileRW {
           CountDownLatch downLatch = new CountDownLatch(1);
           // check file exist
           if(!file.exists()){
+               file.getParentFile().mkdirs();
                file.createNewFile();
           }
           CompletionHandler<Integer,ByteBuffer> handler =  new CompletionHandler<>() {
@@ -63,6 +63,7 @@ public class FileRW {
                public void failed(Throwable exception,
                                   ByteBuffer attachment) {
                     log.error("fail:",exception);
+                    downLatch.countDown();
                }
           };
 
@@ -109,6 +110,15 @@ public class FileRW {
           long pos;
      }
 
+     /**
+      * 管道方式读取
+      * @param file
+      * @param dealer
+      * @param clazz
+      * @param <T>
+      * @return 判断是否读取结束的信号量
+      * @throws Exception
+      */
      public <T> CountDownLatch load(File file,FileContentDealer<T> dealer,Class<T> clazz)throws Exception{
           CountDownLatch downLatch = new CountDownLatch(1);
           if(!file.exists()){
@@ -186,15 +196,15 @@ public class FileRW {
      public String printSize(long size){
           if(size>gb){
                long gbm = size>>30;
-               return String.format("%s.%03sgb",gbm,size-(gbm<<30));
+               return String.format("%s.%03sGB",gbm,size-(gbm<<30));
           }
           if(size>mb){
                long mbm = size>>20;
-               return String.format("%s.%03smb",mbm,size-(mbm<<20));
+               return String.format("%s.%03sMB",mbm,size-(mbm<<20));
           }
           if(size>kb){
                long kbm = size>>10;
-               return String.format("%s.%03dkb",kbm,size-(kbm<<10));
+               return String.format("%s.%03dKB",kbm,size-(kbm<<10));
           }
           return String.format("%sb",size);
      }

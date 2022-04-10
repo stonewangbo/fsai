@@ -1,4 +1,4 @@
-package com.cat.fsai.file;
+package com.cat.fsai.util.file;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;

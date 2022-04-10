@@ -42,7 +42,7 @@ public class BinanceMarketTest {
 		binanceMarket.klines((klines, e)->{
 			log.info("klines:{} \r\n error:{}",klines,e);
 			downLatch.countDown();
-		},startTime,endTime, TR.BTC_USDT);
+		},startTime,endTime,500, TR.BTC_USDT);
 		downLatch.await(2, TimeUnit.SECONDS);
 	}
 	 

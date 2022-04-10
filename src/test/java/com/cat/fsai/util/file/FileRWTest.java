@@ -46,7 +46,7 @@ public class FileRWTest {
                 log.error("save fail",e1);
             }
             downLatch.countDown();
-        },startTime,endTime, TR.BTC_USDT);
+        },startTime,endTime,500, TR.BTC_USDT);
         downLatch.await(2, TimeUnit.SECONDS);
         //Thread.sleep(2000);
 

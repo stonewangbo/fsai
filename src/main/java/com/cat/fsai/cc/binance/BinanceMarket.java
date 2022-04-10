@@ -150,7 +150,7 @@ public class BinanceMarket implements MarketApi {
 		}
 	}
 
-	public void klines(KLineRes kLineRes, Date startTime, Date endTime, TR tr){
+	public void klines(KLineRes kLineRes, Date startTime, Date endTime,int limit, TR tr){
 		try {
 			String tagetUrl = url + klines;
 			Optional<BinanceTR> marketTR = BinanceTR.searchByTr(tr);
@@ -184,7 +184,7 @@ public class BinanceMarket implements MarketApi {
 					.addParameter("interval", "1m")
 					.addParameter("startTime",String.valueOf(startTime.getTime()))
 					.addParameter("endTime", String.valueOf(endTime.getTime()))
-					.addParameter("limit", "500")
+					.addParameter("limit", String.valueOf(limit))
 					.build();
 			HttpRequest request = HttpRequest.newBuilder()
 					.uri(uri)

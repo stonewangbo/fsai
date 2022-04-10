@@ -1,5 +1,6 @@
 package com.cat.fsai;
 
+import com.alibaba.fastjson.JSONObject;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
