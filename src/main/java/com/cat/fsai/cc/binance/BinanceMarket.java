@@ -240,6 +240,7 @@ public class BinanceMarket implements MarketApi {
 						return "fallback";
 					});
 		}catch (Exception e){
+			log.error("klines fail:",e);
 			kLineRes.kLine(null,e);
 		}
 	}

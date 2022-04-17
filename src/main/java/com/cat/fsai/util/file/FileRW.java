@@ -196,11 +196,11 @@ public class FileRW {
      public String printSize(long size){
           if(size>gb){
                long gbm = size>>30;
-               return String.format("%s.%03sGB",gbm,size-(gbm<<30));
+               return String.format("%s.%03dGB",gbm,size-(gbm<<30));
           }
           if(size>mb){
                long mbm = size>>20;
-               return String.format("%s.%03sMB",mbm,size-(mbm<<20));
+               return String.format("%s.%03dMB",mbm,size-(mbm<<20));
           }
           if(size>kb){
                long kbm = size>>10;

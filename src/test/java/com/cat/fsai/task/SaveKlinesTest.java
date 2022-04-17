@@ -25,6 +25,6 @@ public class SaveKlinesTest {
 
     @Test
     public void saveKlines() throws Exception{
-        saveKlines.saveKlines(TR.BTC_USDT, LocalDateTime.now().plusMinutes(-2000),LocalDateTime.now());
+        saveKlines.saveKlines(TR.BTC_USDT, LocalDateTime.now().plusMinutes(-2000),LocalDateTime.now(),d->log.info("progress:{}",d));
     }
 }

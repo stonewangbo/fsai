@@ -1,11 +1,13 @@
 package com.cat.fsai.task;
 
 import com.cat.fsai.cc.binance.BinanceMarket;
+import com.cat.fsai.inter.ProgressRes;
 import com.cat.fsai.type.TR;
 import com.cat.fsai.util.file.FileRW;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Calendar;
 import java.util.Date;
@@ -40,13 +43,18 @@ public class SaveKlines {
     private BinanceMarket binanceMarket;
 
 
-    public void saveKlines(TR tr,final LocalDateTime startTime,final LocalDateTime endTime)throws Exception{
+    @Async
+    public void saveKlines(TR tr, final LocalDateTime startTime, final LocalDateTime endTime, ProgressRes progressRes)throws Exception{
         // 按时间进行拆分
         final int size = 1000;
         LocalDateTime nowStart = LocalDateTime.from(startTime);
+        long duration =  ChronoUnit.MINUTES.between(startTime,endTime);
         while (nowStart.compareTo(endTime)<0){
             LocalDateTime nowEnd = nowStart.plusMinutes(size);
             if(nowEnd.compareTo(endTime)>0) nowEnd = endTime;
+
+
+
             //生成文件
             File flle = getFile(nowStart,tr);
             CountDownLatch downLatch = new CountDownLatch(1);
@@ -56,13 +64,17 @@ public class SaveKlines {
 
                 try {
                     var sign =  fileRW.save(flle, klines);
-                    sign.await(2, TimeUnit.SECONDS);
+                    sign.await(5, TimeUnit.SECONDS);
                 }catch (Exception e1){
                     log.error("save fail",e1);
                 }
                 downLatch.countDown();
             },java.sql.Timestamp.valueOf(nowStart),java.sql.Timestamp.valueOf(nowEnd),size, TR.BTC_USDT);
             downLatch.await(5, TimeUnit.SECONDS);
+
+            if(progressRes!=null){
+                progressRes.res(1d-(Double.valueOf(ChronoUnit.MINUTES.between(nowEnd,endTime))/Double.valueOf(duration)));
+            }
 
             nowStart = nowEnd;
         }

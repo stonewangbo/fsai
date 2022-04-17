@@ -1,6 +1,7 @@
 package com.cat.fsai.fx;
 
 import com.cat.fsai.cc.binance.BinanceMarket;
+import com.cat.fsai.task.SaveKlines;
 import com.cat.fsai.type.TR;
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
@@ -23,6 +24,7 @@ import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.ResourceBundle;
@@ -57,7 +59,7 @@ public class HelloworldController implements Initializable {
 
     // Be aware: This is a Spring bean. So we can do the following:
     @Autowired
-    private BinanceMarket binanceMarket;
+    private SaveKlines saveKlines;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -89,28 +91,34 @@ public class HelloworldController implements Initializable {
 
     @FXML
     private void clickLoad(final Event event) throws Exception{
-        CountDownLatch downLatch = new CountDownLatch(1);
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
-        Date startTimeD =Date.from(startTime.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
-        Date endTimeD = Date.from(endTime.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
-        binanceMarket.klines((dg, e)->{
+//        CountDownLatch downLatch = new CountDownLatch(1);
+//        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+//        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
+//        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm");
+//        Date startTimeD =Date.from(startTime.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+//        Date endTimeD = Date.from(endTime.getValue().atStartOfDay(ZoneId.systemDefault()).toInstant());
+//        binanceMarket.klines((dg, e)->{
+//            Platform.runLater(()->{
+//                log.info("币安最新交易深度:{} startTimeD:{} endTimeD：{}",dg,startTimeD,endTimeD);
+//                welcomeText.setText("dg:"+dg);
+//
+//                XYChart.Series dataSeries1 = new XYChart.Series();
+//                dataSeries1.setName(yearFormat.format(startTimeD));
+//                for(var item:dg) {
+//                    dataSeries1.getData().add(new XYChart.Data(
+//                            timeFormat.format(item.getStartTime()), item.getBeginPr()));
+//                }
+//                lineChart.getData().add(dataSeries1);
+//
+//            });
+//        },startTimeD,endTimeD, 1000,TR.BTC_USDT);
+
+        saveKlines.saveKlines(TR.BTC_USDT, startTime.getValue().atStartOfDay(),endTime.getValue().atStartOfDay(), (d)->{
+            log.info("progress:{}",d);
             Platform.runLater(()->{
-                log.info("币安最新交易深度:{} startTimeD:{} endTimeD：{}",dg,startTimeD,endTimeD);
-                welcomeText.setText("dg:"+dg);
-
-                XYChart.Series dataSeries1 = new XYChart.Series();
-                dataSeries1.setName(yearFormat.format(startTimeD));
-                for(var item:dg) {
-                    dataSeries1.getData().add(new XYChart.Data(
-                            timeFormat.format(item.getStartTime()), item.getBeginPr()));
-                }
-                lineChart.getData().add(dataSeries1);
-
+                loadProgress.setProgress(d);
             });
-        },startTimeD,endTimeD, 1000,TR.BTC_USDT);
-
-        welcomeText.setText("测试：");
+        });
+       // welcomeText.setText("测试：");
     }
 }
